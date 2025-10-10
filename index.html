@@ -41,7 +41,6 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      cursor: default;
       user-select: none;
       transition: transform 0.3s ease;
     }
@@ -52,7 +51,7 @@
       z-index: 10;
     }
 
-    .button {
+    a.button {
       width: 120px;
       height: 120px;
       background: #11181f;
@@ -71,11 +70,13 @@
       text-shadow:
         0 0 12px #00ff99;
       position: relative;
-      user-select: none;
+      text-decoration: none;
+      cursor: pointer;
       transition: box-shadow 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+      user-select: none;
     }
 
-    .button.off {
+    a.button.off {
       border-color: #ff3b3b;
       box-shadow:
         inset 0 0 20px #7f0000,
@@ -92,7 +93,6 @@
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
-      cursor: pointer;
       user-select: none;
       z-index: 20;
       display: flex;
@@ -100,7 +100,7 @@
       justify-content: center;
     }
 
-    .main-button {
+    a.main-button {
       width: 220px;
       height: 220px;
       background: #11181f;
@@ -118,9 +118,11 @@
         inset 0 0 20px #007f44,
         0 0 20px #00ff99;
       user-select: none;
+      cursor: pointer;
+      text-decoration: none;
     }
 
-    .main-button.off {
+    a.main-button.off {
       border-color: #ff3b3b;
       box-shadow:
         inset 0 0 20px #7f0000,
@@ -155,7 +157,7 @@
 <body>
   <h1>Spaceship Dashboard - Client View</h1>
   <div class="dashboard" id="dashboard">
-    <!-- Buttons will be created by JS -->
+    <!-- Buttons created by JS -->
   </div>
 
   <script>
@@ -165,6 +167,21 @@
     // Status page URL (change this to your actual GitHub Pages status page)
     const STATUS_PAGE_URL = 'https://yourgithubusername.github.io/mission-status.html';
 
+    // Array of URLs for buttons 1-11, customize these links!
+    const buttonLinks = [
+      'https://example.com/button1',
+      'https://example.com/button2',
+      'https://example.com/button3',
+      'https://example.com/button4',
+      'https://example.com/button5',
+      'https://example.com/button6',
+      'https://example.com/button7',
+      'https://example.com/button8',
+      'https://example.com/button9',
+      'https://example.com/button10',
+      'https://example.com/button11'
+    ];
+
     function createButtons() {
       const containers = [];
 
@@ -173,9 +190,12 @@
         const container = document.createElement('div');
         container.className = 'button-container';
 
-        const button = document.createElement('div');
+        const button = document.createElement('a');
         button.className = 'button';
         button.textContent = `Btn ${i + 1}`;
+        button.href = buttonLinks[i];
+        button.target = '_blank'; // open in new tab, optional
+        button.rel = 'noopener noreferrer';
 
         const light = document.createElement('div');
         light.className = 'light';
@@ -192,18 +212,16 @@
       const mainContainer = document.createElement('div');
       mainContainer.className = 'main-button-container';
 
-      const mainButton = document.createElement('div');
+      const mainButton = document.createElement('a');
       mainButton.className = 'button main-button';
       mainButton.textContent = 'STATUS';
+      mainButton.href = STATUS_PAGE_URL;
+      mainButton.target = '_blank'; // optional
+      mainButton.rel = 'noopener noreferrer';
 
       mainContainer.appendChild(mainButton);
 
       dashboard.appendChild(mainContainer);
-
-      // Add click event to main button
-      mainButton.addEventListener('click', () => {
-        window.location.href = STATUS_PAGE_URL;
-      });
 
       containers.push(mainContainer);
 
@@ -238,7 +256,7 @@
         // Update buttons 1 to 11
         for(let i = 0; i < 11; i++) {
           const container = dashboard.children[i];
-          const button = container.querySelector('.button');
+          const button = container.querySelector('a.button');
           const light = container.querySelector('.light');
 
           if (statuses[i] === 'ON') {
@@ -253,7 +271,7 @@
         // Update main button glow based on overall status
         const allOn = statuses.every(s => s === 'ON');
         const mainButtonContainer = dashboard.querySelector('.main-button-container');
-        const mainButton = mainButtonContainer.querySelector('.main-button');
+        const mainButton = mainButtonContainer.querySelector('a.main-button');
         if (allOn) {
           mainButton.classList.remove('off');
         } else {
