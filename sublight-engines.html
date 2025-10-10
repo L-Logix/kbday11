@@ -1,68 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Sublight Engines</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Sublight Engines Challenge</title>
   <style>
     body {
       background: #0b0c0f;
       color: #00ff99;
       font-family: 'Orbitron', sans-serif;
+      margin: 0;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
+      user-select: none;
     }
     h1 {
+      margin-bottom: 20px;
+      letter-spacing: 0.15em;
       text-shadow: 0 0 10px #00ff99;
-      font-size: 2rem;
     }
-    p {
-      max-width: 600px;
-      line-height: 1.6;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 80px);
+      grid-gap: 15px;
+      user-select: none;
     }
-    a.back {
-      margin-top: 20px;
-      color: #00ff99;
-      text-decoration: none;
-      font-size: 1rem;
-      text-shadow: 0 0 5px #00ff99;
+    .cell {
+      width: 80px;
+      height: 80px;
+      background: #11181f;
+      border-radius: 10px;
+      border: 3px solid #00ff99;
+      box-shadow: inset 0 0 10px #007f44, 0 0 10px #00ff99;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.8rem;
+      cursor: pointer;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .cell.found {
+      border-color: #0f0;
+      box-shadow: inset 0 0 20px #0f0, 0 0 20px #0f0;
+      color: #0f0;
+    }
+    .status {
+      margin-top: 30px;
+      font-size: 1.4rem;
+      text-shadow: 0 0 8px #00ff99;
     }
   </style>
 </head>
 <body>
-  <h1>Sublight Engines</h1>
-  <p>
-    These engines provide the standard thrust for a starship in realspace. They are used for maneuvering, takeoffs, landings, and traveling at speeds below that of light.
-  </p>
-  <h2>Sublight Engines</h2>
-<p>Status: OFFLINE</p>
-<p>Recover and align the 3 fuel cells. Enter the correct frequency alignment code below:</p>
+  <h1>Sublight Engines Challenge</h1>
+  <div class="grid" id="grid"></div>
+  <div class="status" id="status">Activate all 10 fuel cells!</div>
 
-<input id="fuelCode" placeholder="Enter 10-Letter Code (e.g. XZA)" />
-<button onclick="checkFuelCode()">Submit</button>
-<p id="result"></p>
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+    
+    const grid = document.getElementById('grid');
+    const status = document.getElementById('status');
+    let foundCells = [];
 
-<script>
-  function checkFuelCode() {
-    const code = document.getElementById("fuelCode").value.trim().toUpperCase();
-    const result = document.getElementById("result");
-
-    if (code === "MRFKVJTLSB") {
-      result.textContent = "✅ Fuel Cells Aligned. Sublight Engines Online!";
-      result.style.color = "#0f0";
-    } else {
-      result.textContent = "❌ Incorrect Code. Check the order and try again.";
-      result.style.color = "#f33";
+    async function fetchStatus() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        return data;
+      } catch (e) {
+        console.error('Failed to fetch status:', e);
+        return null;
+      }
     }
-  }
-</script>
 
+    async function updateStatusOnServer(index, newStatus) {
+      // Existing API is GET only, so we simulate turning "ON" by just POSTing with no API (modify if needed)
+      // If your existing Google Apps Script supports POST to update status, use that here:
+      // Otherwise, you might need to extend the Apps Script to allow POST.
+      // For now, just a simple fetch to simulate.
+      
+      // For demo, just do nothing.
+      // Replace this with actual POST to update fuel cell i to "ON" if available.
+      // Example:
+      /*
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({fuelCell: index + 1, status: "ON"}),
+      });
+      */
+    }
+
+    function createGrid() {
+      for (let i = 1; i <= 10; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = i;
+        cell.dataset.index = i - 1;
+        cell.addEventListener('click', async () => {
+          const idx = parseInt(cell.dataset.index);
+          if (!foundCells.includes(idx)) {
+            foundCells.push(idx);
+            cell.classList.add('found');
+            await updateStatusOnServer(idx, 'ON');
+            updateStatus();
+          }
+        });
+        grid.appendChild(cell);
+      }
+    }
+
+    function updateStatus() {
+      if (foundCells.length === 10) {
+        status.textContent = 'ENGINES ONLINE! All fuel cells activated!';
+        status.style.color = '#0f0';
+      } else {
+        status.textContent = `Fuel cells activated: ${foundCells.length} / 10`;
+        status.style.color = '#00ff99';
+      }
+    }
+
+    async function initialize() {
+      createGrid();
+
+      const statuses = await fetchStatus();
+      if (!statuses) return;
+
+      // The first 10 statuses in the sheet are for Sublight Engines fuel cells.
+      // The API returns an array like ["ON","OFF","ON",...]
+      for (let i = 0; i < 10; i++) {
+        if (statuses[i] === 'ON') {
+          foundCells.push(i);
+          const cell = grid.querySelector(`.cell[data-index="${i}"]`);
+          if (cell) cell.classList.add('found');
+        }
+      }
+      updateStatus();
+    }
+
+    initialize();
+  </script>
 </body>
-  
 </html>
