@@ -1,103 +1,220 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
   <title>Spaceship Dashboard - Client</title>
   <style>
+    /* Reset */
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background: black;
-      color: lime;
-      font-family: monospace, monospace;
+      background: #0b0c0f;
+      color: #00ff99;
+      font-family: 'Orbitron', sans-serif;
       text-align: center;
-      padding: 20px;
+      padding: 40px 20px;
+      user-select: none;
     }
+
     h1 {
-      margin-bottom: 40px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-bottom: 60px;
+      text-shadow:
+        0 0 10px #00ff99,
+        0 0 20px #00ff99;
     }
-    .lights-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 30px;
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
     }
-    .light-button {
+
+    /* Place the main button in the center bottom */
+    .main-button-container {
+      grid-column: 3;
+      grid-row: 3;
+      position: relative;
+      z-index: 2;
+      justify-self: center;
+      align-self: center;
+    }
+
+    .button-container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 70px;
       cursor: default;
       user-select: none;
+      position: relative;
+      transition: transform 0.3s ease;
     }
+
+    .button-container:hover {
+      transform: scale(1.1);
+      filter: drop-shadow(0 0 6px #00ff99);
+    }
+
     .button {
-      width: 60px;
-      height: 40px;
-      background: #222;
-      border: 2px solid #444;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      box-shadow: inset 0 2px 5px #555;
-      line-height: 40px;
-      color: lime;
-      font-weight: bold;
+      width: 140px;
+      height: 140px;
+      background: #11181f;
+      border-radius: 20px;
+      border: 3px solid #00ff99;
+      box-shadow:
+        inset 0 0 15px #007f44,
+        0 0 15px #00ff99;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 900;
+      font-size: 2rem;
+      color: #00ff99;
+      letter-spacing: 0.1em;
+      text-shadow:
+        0 0 8px #00ff99;
+      position: relative;
+      user-select: none;
     }
+
+    .button.off {
+      border-color: #ff3b3b;
+      box-shadow:
+        inset 0 0 15px #7f0000,
+        0 0 15px #ff3b3b;
+      color: #ff3b3b;
+      text-shadow: 0 0 8px #ff3b3b;
+    }
+
+    /* Main button bigger */
+    .main-button {
+      width: 200px;
+      height: 200px;
+      font-size: 3rem;
+      border-radius: 30px;
+      box-shadow:
+        inset 0 0 25px #007f44,
+        0 0 25px #00ff99;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .main-button.off {
+      box-shadow:
+        inset 0 0 25px #7f0000,
+        0 0 25px #ff3b3b;
+    }
+
+    /* Light indicator inside button */
     .light {
-      width: 25px;
-      height: 25px;
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
-      background: darkred;
-      box-shadow: 0 0 5px #300;
+      background: #700000;
+      box-shadow: 0 0 6px #300;
       transition: background 0.3s, box-shadow 0.3s;
+      border: 2px solid #330000;
     }
+
     .light.on {
-      background: red;
-      box-shadow: 0 0 12px red;
+      background: #0f0;
+      box-shadow: 0 0 12px #0f0;
+      border-color: #0a0;
     }
+
+    /* Layout for 10 normal buttons + main in center bottom */
+    /* Positions to create a "U" shape with main button in center bottom */
+
+    /* Top row: buttons 1 to 5 */
+    .btn-0 { grid-column: 1; grid-row: 1; }
+    .btn-1 { grid-column: 2; grid-row: 1; }
+    .btn-2 { grid-column: 3; grid-row: 1; }
+    .btn-3 { grid-column: 4; grid-row: 1; }
+    .btn-4 { grid-column: 5; grid-row: 1; }
+
+    /* Middle row: buttons 6 and 7 on sides */
+    .btn-5 { grid-column: 1; grid-row: 2; }
+    .btn-6 { grid-column: 5; grid-row: 2; }
+
+    /* Bottom row: buttons 8,9,10 on sides with main button center */
+    .btn-7 { grid-column: 1; grid-row: 3; }
+    .btn-8 { grid-column: 2; grid-row: 3; }
+    .btn-9 { grid-column: 4; grid-row: 3; }
+    .btn-10 { /* main button container handled separately */ }
+
   </style>
 </head>
 <body>
   <h1>Spaceship Dashboard - Client View</h1>
-  <div class="lights-container" id="lightsContainer">
+  <div class="dashboard" id="dashboard">
+    <!-- Buttons will be generated here -->
   </div>
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+    const dashboard = document.getElementById('dashboard');
 
-    const lightsContainer = document.getElementById('lightsContainer');
-
-    function createLights() {
+    // Create buttons in desired layout
+    function createButtons() {
       for (let i = 0; i < 11; i++) {
         const container = document.createElement('div');
-        container.className = 'light-button';
-        container.innerHTML = `
-          <div class="button">Btn ${i + 1}</div>
-          <div class="light" id="light-${i}"></div>
-        `;
-        lightsContainer.appendChild(container);
+        container.className = 'button-container btn-' + i;
+
+        // Main button special styling and container positioning
+        if (i === 10) {
+          container.classList.add('main-button-container');
+        }
+
+        const button = document.createElement('div');
+        button.className = 'button';
+        if (i === 10) button.classList.add('main-button');
+        button.textContent = `Btn ${i + 1}`;
+
+        const light = document.createElement('div');
+        light.className = 'light';
+        light.id = `light-${i}`;
+
+        container.appendChild(button);
+        container.appendChild(light);
+        dashboard.appendChild(container);
       }
     }
 
-    async function updateLights() {
+    async function updateButtons() {
       try {
         const res = await fetch(API_URL);
         const statuses = await res.json();
 
         statuses.forEach((status, i) => {
+          const container = document.querySelector(`.btn-${i}`) || document.querySelector('.main-button-container');
+          const button = container.querySelector('.button');
           const light = document.getElementById(`light-${i}`);
-          if (!light) return;
-          if (status === "ON") {
-            light.classList.add("on");
+
+          if (status === 'ON') {
+            button.classList.remove('off');
+            light.classList.add('on');
           } else {
-            light.classList.remove("on");
+            button.classList.add('off');
+            light.classList.remove('on');
           }
         });
       } catch (e) {
-        console.error("Failed to fetch light status:", e);
+        console.error('Failed to update button status:', e);
       }
     }
 
-    createLights();
-    updateLights();
-    setInterval(updateLights, 3000);
+    createButtons();
+    updateButtons();
+    setInterval(updateButtons, 3000);
   </script>
 </body>
 </html>
