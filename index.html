@@ -4,172 +4,171 @@
   <meta charset="UTF-8" />
   <title>Spaceship Dashboard - Client</title>
   <style>
-    /* Reset */
-    * {
-      box-sizing: border-box;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
 
     body {
       background: #0b0c0f;
       color: #00ff99;
       font-family: 'Orbitron', sans-serif;
-      text-align: center;
-      padding: 40px 20px;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       user-select: none;
+      overflow: hidden;
     }
 
     h1 {
+      margin-bottom: 40px;
+      text-align: center;
       font-weight: 700;
-      letter-spacing: 0.1em;
-      margin-bottom: 60px;
+      letter-spacing: 0.15em;
       text-shadow:
         0 0 10px #00ff99,
         0 0 20px #00ff99;
     }
 
     .dashboard {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 30px;
-      max-width: 900px;
-      margin: 0 auto;
       position: relative;
-    }
-
-    /* Place the main button in the center bottom */
-    .main-button-container {
-      grid-column: 3;
-      grid-row: 3;
-      position: relative;
-      z-index: 2;
-      justify-self: center;
-      align-self: center;
+      width: 600px;
+      height: 600px;
+      /* border: 1px solid #00ff99; Uncomment to debug */
     }
 
     .button-container {
+      position: absolute;
       display: flex;
       flex-direction: column;
       align-items: center;
       cursor: default;
       user-select: none;
-      position: relative;
       transition: transform 0.3s ease;
     }
 
     .button-container:hover {
       transform: scale(1.1);
-      filter: drop-shadow(0 0 6px #00ff99);
+      filter: drop-shadow(0 0 12px #00ff99);
+      z-index: 10;
     }
 
     .button {
-      width: 140px;
-      height: 140px;
+      width: 120px;
+      height: 120px;
       background: #11181f;
-      border-radius: 20px;
+      border-radius: 25px;
       border: 3px solid #00ff99;
       box-shadow:
-        inset 0 0 15px #007f44,
-        0 0 15px #00ff99;
+        inset 0 0 20px #007f44,
+        0 0 20px #00ff99;
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: 900;
-      font-size: 2rem;
+      font-size: 1.8rem;
       color: #00ff99;
       letter-spacing: 0.1em;
       text-shadow:
-        0 0 8px #00ff99;
+        0 0 12px #00ff99;
       position: relative;
       user-select: none;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease, color 0.3s ease;
     }
 
     .button.off {
       border-color: #ff3b3b;
       box-shadow:
-        inset 0 0 15px #7f0000,
-        0 0 15px #ff3b3b;
+        inset 0 0 20px #7f0000,
+        0 0 20px #ff3b3b;
       color: #ff3b3b;
-      text-shadow: 0 0 8px #ff3b3b;
+      text-shadow: 0 0 12px #ff3b3b;
     }
 
-    /* Main button bigger */
     .main-button {
-      width: 200px;
-      height: 200px;
-      font-size: 3rem;
-      border-radius: 30px;
+      width: 220px;
+      height: 220px;
+      font-size: 3.2rem;
+      border-radius: 35px;
       box-shadow:
-        inset 0 0 25px #007f44,
-        0 0 25px #00ff99;
+        inset 0 0 30px #007f44,
+        0 0 30px #00ff99;
       transition: box-shadow 0.3s ease;
+      z-index: 5;
     }
 
     .main-button.off {
       box-shadow:
-        inset 0 0 25px #7f0000,
-        0 0 25px #ff3b3b;
+        inset 0 0 30px #7f0000,
+        0 0 30px #ff3b3b;
     }
 
-    /* Light indicator inside button */
+    /* Light indicator */
     .light {
       position: absolute;
-      bottom: 12px;
-      right: 12px;
-      width: 30px;
-      height: 30px;
+      bottom: 14px;
+      right: 14px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       background: #700000;
-      box-shadow: 0 0 6px #300;
-      transition: background 0.3s, box-shadow 0.3s;
+      box-shadow: 0 0 8px #300;
+      transition: background 0.3s, box-shadow 0.3s, border-color 0.3s;
       border: 2px solid #330000;
+      user-select: none;
     }
 
     .light.on {
       background: #0f0;
-      box-shadow: 0 0 12px #0f0;
+      box-shadow: 0 0 18px #0f0;
       border-color: #0a0;
     }
-
-    /* Layout for 10 normal buttons + main in center bottom */
-    /* Positions to create a "U" shape with main button in center bottom */
-
-    /* Top row: buttons 1 to 5 */
-    .btn-0 { grid-column: 1; grid-row: 1; }
-    .btn-1 { grid-column: 2; grid-row: 1; }
-    .btn-2 { grid-column: 3; grid-row: 1; }
-    .btn-3 { grid-column: 4; grid-row: 1; }
-    .btn-4 { grid-column: 5; grid-row: 1; }
-
-    /* Middle row: buttons 6 and 7 on sides */
-    .btn-5 { grid-column: 1; grid-row: 2; }
-    .btn-6 { grid-column: 5; grid-row: 2; }
-
-    /* Bottom row: buttons 8,9,10 on sides with main button center */
-    .btn-7 { grid-column: 1; grid-row: 3; }
-    .btn-8 { grid-column: 2; grid-row: 3; }
-    .btn-9 { grid-column: 4; grid-row: 3; }
-    .btn-10 { /* main button container handled separately */ }
 
   </style>
 </head>
 <body>
   <h1>Spaceship Dashboard - Client View</h1>
   <div class="dashboard" id="dashboard">
-    <!-- Buttons will be generated here -->
+    <!-- Buttons generated by JS -->
   </div>
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
     const dashboard = document.getElementById('dashboard');
 
-    // Create buttons in desired layout
+    // Positions buttons in a circle
+    function positionButtons(buttonContainers, centerX, centerY, radius) {
+      const count = buttonContainers.length;
+
+      buttonContainers.forEach((container, index) => {
+        if(index === 10) {
+          // main button center
+          container.style.left = `${centerX}px`;
+          container.style.top = `${centerY}px`;
+          container.style.transform = `translate(-50%, -50%)`;
+          return;
+        }
+
+        // place 10 buttons in circle around center button
+        // angle in radians
+        const angle = (index / 10) * (2 * Math.PI) - Math.PI / 2; // start at top
+
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        container.style.left = `${x}px`;
+        container.style.top = `${y}px`;
+        container.style.transform = `translate(-50%, -50%)`;
+      });
+    }
+
     function createButtons() {
+      const containers = [];
+
       for (let i = 0; i < 11; i++) {
         const container = document.createElement('div');
-        container.className = 'button-container btn-' + i;
+        container.className = 'button-container';
 
-        // Main button special styling and container positioning
         if (i === 10) {
           container.classList.add('main-button-container');
         }
@@ -186,7 +185,11 @@
         container.appendChild(button);
         container.appendChild(light);
         dashboard.appendChild(container);
+
+        containers.push(container);
       }
+
+      return containers;
     }
 
     async function updateButtons() {
@@ -195,9 +198,9 @@
         const statuses = await res.json();
 
         statuses.forEach((status, i) => {
-          const container = document.querySelector(`.btn-${i}`) || document.querySelector('.main-button-container');
+          const container = dashboard.children[i];
           const button = container.querySelector('.button');
-          const light = document.getElementById(`light-${i}`);
+          const light = container.querySelector('.light');
 
           if (status === 'ON') {
             button.classList.remove('off');
@@ -212,9 +215,24 @@
       }
     }
 
-    createButtons();
+    const buttons = createButtons();
+
+    // Position them after buttons are created
+    // Dashboard center is half width and height
+    const centerX = 300;
+    const centerY = 300;
+    const radius = 220;
+
+    positionButtons(buttons, centerX, centerY, radius);
+
     updateButtons();
     setInterval(updateButtons, 3000);
+
+    // Optional: reposition on window resize
+    window.addEventListener('resize', () => {
+      positionButtons(buttons, centerX, centerY, radius);
+    });
+
   </script>
 </body>
 </html>
