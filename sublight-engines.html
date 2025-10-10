@@ -40,6 +40,29 @@
   <p>
     These engines provide the standard thrust for a starship in realspace. They are used for maneuvering, takeoffs, landings, and traveling at speeds below that of light.
   </p>
-  <a class="back" href="dashboard.html">← Back to Dashboard</a>
+  <h2>Sublight Engines</h2>
+<p>Status: OFFLINE</p>
+<p>Recover and align the 3 fuel cells. Enter the correct frequency alignment code below:</p>
+
+<input id="fuelCode" placeholder="Enter 10-Letter Code (e.g. XZA)" />
+<button onclick="checkFuelCode()">Submit</button>
+<p id="result"></p>
+
+<script>
+  function checkFuelCode() {
+    const code = document.getElementById("fuelCode").value.trim().toUpperCase();
+    const result = document.getElementById("result");
+
+    if (code === "MRFKVJTLSB") {
+      result.textContent = "✅ Fuel Cells Aligned. Sublight Engines Online!";
+      result.style.color = "#0f0";
+    } else {
+      result.textContent = "❌ Incorrect Code. Check the order and try again.";
+      result.style.color = "#f33";
+    }
+  }
+</script>
+
 </body>
+  
 </html>
