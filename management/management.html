@@ -54,11 +54,10 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
     const controlsContainer = document.getElementById('controlsContainer');
 
-    // Load statuses and create controls
     async function loadControls() {
       try {
         const res = await fetch(API_URL);
-        const statuses = await res.json(); // Expect array like ["ON", "OFF", ...]
+        const statuses = await res.json();
 
         controlsContainer.innerHTML = "";
         statuses.forEach((status, i) => {
@@ -77,13 +76,11 @@
       }
     }
 
-    // Send POST request to update light status
     async function setLight(index, status) {
       try {
         await fetch(`${API_URL}?index=${index}&status=${status}`, {
           method: "POST",
         });
-        // Refresh after update
         loadControls();
       } catch (e) {
         console.error("Failed to update light:", e);
