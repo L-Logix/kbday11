@@ -85,16 +85,24 @@
     }
 
     /* Main (Status) button center */
-    .main-button {
-      width: 240px;
-      height: 240px;
-      font-size: 2.6rem;
-      border-radius: 40px;
-      background: #11181f;
-      position: relative;
+    .main-button-container {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
       cursor: pointer;
       user-select: none;
-      transition: box-shadow 0.3s ease;
+      z-index: 20;
+    }
+
+    .main-button {
+      width: 220px;
+      height: 220px;
+      background: #11181f;
+      border-radius: 40px;
+      border: 4px solid transparent;
       box-shadow:
         inset 0 0 30px #007f44,
         0 0 30px #00ff99;
@@ -105,6 +113,10 @@
       color: #00ff99;
       font-weight: 900;
       letter-spacing: 0.1em;
+      font-size: 2.6rem;
+      position: relative;
+      transition: box-shadow 0.3s ease, color 0.3s ease;
+      z-index: 2;
     }
 
     .main-button.off {
@@ -136,37 +148,31 @@
       border-color: #0a0;
     }
 
-    /* Status button progress border container */
-    .progress-ring {
+    /* Circular segmented border for main button */
+
+    .progress-circle {
       position: absolute;
-      top: -10px;
-      left: -10px;
+      top: 50%;
+      left: 50%;
       width: 260px;
       height: 260px;
       border-radius: 50%;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-content: center;
+      transform: translate(-50%, -50%);
       pointer-events: none;
       user-select: none;
-      transform: rotate(-90deg); /* start progress from top */
-      box-sizing: border-box;
-      padding: 6px;
-      gap: 6px;
+      z-index: 1;
     }
 
-    /* 11 segments around main button */
     .progress-segment {
-      flex: 1 1 calc(100% / 11 - 8px);
-      height: 12px;
+      position: absolute;
+      width: 20px;
+      height: 8px;
       background: #ff3b3b; /* red by default */
-      border-radius: 6px;
+      border-radius: 4px;
       box-shadow:
-        0 0 5px #7f0000;
+        0 0 6px #7f0000;
       transition: background 0.4s ease, box-shadow 0.4s ease;
       transform-origin: center;
-      margin: 0 1px;
     }
 
     .progress-segment.on {
@@ -215,26 +221,41 @@
 
       // Create main status button (button 12)
       const mainContainer = document.createElement('div');
-      mainContainer.className = 'button-container main-button-container';
+      mainContainer.className = 'main-button-container';
 
       const mainButton = document.createElement('div');
       mainButton.className = 'button main-button';
       mainButton.textContent = 'STATUS';
 
-      // Add progress bar container around main button
-      const progressRing = document.createElement('div');
-      progressRing.className = 'progress-ring';
+      mainContainer.appendChild(mainButton);
 
-      // Create 11 segments for progress bar
+      // Create circular progress border segments (11 segments)
+      const progressCircle = document.createElement('div');
+      progressCircle.className = 'progress-circle';
+
       for (let i = 0; i < 11; i++) {
         const segment = document.createElement('div');
         segment.className = 'progress-segment';
         segment.id = `progress-segment-${i}`;
-        progressRing.appendChild(segment);
+
+        // Position the segments evenly spaced in a circle
+        const angle = (i / 11) * 360 - 90; // start at top (-90deg)
+        // Place segment at radius 125px from center of progressCircle (half width 130 - segment width/2)
+        const radius = 125;
+
+        // Calculate x,y relative to center
+        const rad = angle * Math.PI / 180;
+        const x = 130 + radius * Math.cos(rad) - 10; // 10 = half segment width
+        const y = 130 + radius * Math.sin(rad) - 4;  // 4 = half segment height
+
+        segment.style.left = `${x}px`;
+        segment.style.top = `${y}px`;
+        segment.style.transform = `rotate(${angle + 90}deg)`; // rotate so segment aligns tangentially
+
+        progressCircle.appendChild(segment);
       }
 
-      mainContainer.appendChild(mainButton);
-      mainContainer.appendChild(progressRing);
+      mainContainer.appendChild(progressCircle);
       dashboard.appendChild(mainContainer);
 
       // Add click event to main button
@@ -263,12 +284,9 @@
         container.style.transform = 'translate(-50%, -50%)';
       }
 
-      // Main button (index 11) center
+      // Main button (index 11) center (already positioned absolute with CSS)
       const mainContainer = buttonContainers[11];
-      mainContainer.style.left = `${centerX}px`;
-      mainContainer.style.top = `${centerY}px`;
-      mainContainer.style.transform = 'translate(-50%, -50%)';
-      mainContainer.style.zIndex = '10';
+      // Positions handled by CSS (.main-button-container), so no changes here
     }
 
     // Update button lights and progress ring based on API data
@@ -296,7 +314,6 @@
         }
 
         // Optionally update main button style based on overall status
-        // Example: if all buttons ON, main button green; else red
         const allOn = statuses.every(status => status === 'ON');
         const mainButton = dashboard.children[11].querySelector('.main-button');
         if (allOn) {
