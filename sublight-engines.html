@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
   <title>Sublight Engines Challenge</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
     body {
       background: #0b0c0f;
       color: #00ff99;
@@ -21,128 +23,255 @@
       letter-spacing: 0.15em;
       text-shadow: 0 0 10px #00ff99;
     }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(5, 80px);
-      grid-gap: 15px;
+      grid-template-columns: repeat(5, 100px);
+      grid-gap: 20px;
+      perspective: 1000px;
       user-select: none;
     }
-    .cell {
-      width: 80px;
-      height: 80px;
-      background: #11181f;
-      border-radius: 10px;
-      border: 3px solid #00ff99;
-      box-shadow: inset 0 0 10px #007f44, 0 0 10px #00ff99;
+
+    .card {
+      width: 100px;
+      height: 100px;
+      cursor: pointer;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+    }
+
+    .card.flipped {
+      transform: rotateY(180deg);
+      cursor: default;
+    }
+
+    .card-inner {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 15px;
+      box-shadow: inset 0 0 15px #007f44, 0 0 15px #00ff99;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 1.8rem;
-      cursor: pointer;
-      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+      font-size: 2.2rem;
+      user-select: none;
     }
-    .cell.found {
+
+    .card-front {
+      background: #11181f;
+      border: 3px solid #00ff99;
+      color: #00ff99;
+    }
+
+    .card-back {
+      background: #001100;
+      border: 3px solid #0f0;
+      color: #0f0;
+      transform: rotateY(180deg);
+      flex-direction: column;
+      padding: 10px;
+      box-sizing: border-box;
+      font-size: 1.6rem;
+      letter-spacing: 0.1em;
+    }
+
+    input.letter-input {
+      margin-top: 8px;
+      width: 60px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      background: #002200;
+      border: 2px solid #0f0;
+      color: #0f0;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    input.letter-input:focus {
+      box-shadow: 0 0 8px #0f0;
+    }
+
+    .card.found .card-front {
       border-color: #0f0;
-      box-shadow: inset 0 0 20px #0f0, 0 0 20px #0f0;
+      box-shadow: inset 0 0 25px #0f0, 0 0 25px #0f0;
       color: #0f0;
     }
+
+    .card.found .card-back {
+      border-color: #0f0;
+      box-shadow: inset 0 0 25px #0f0, 0 0 25px #0f0;
+      color: #0f0;
+    }
+
     .status {
       margin-top: 30px;
       font-size: 1.4rem;
       text-shadow: 0 0 8px #00ff99;
+      min-height: 2em;
+      user-select: text;
     }
   </style>
 </head>
 <body>
   <h1>Sublight Engines Challenge</h1>
   <div class="grid" id="grid"></div>
-  <div class="status" id="status">Activate all 10 fuel cells!</div>
+  <div class="status" id="status">Activate all 10 fuel cells by entering the correct letters!</div>
 
-  <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
-    
-    const grid = document.getElementById('grid');
-    const status = document.getElementById('status');
-    let foundCells = [];
+<script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+  
+  // Predefined correct letters for the 10 fuel cells (can customize)
+  // Example: random letters or secret codes your brother must guess/find
+  const correctLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
-    async function fetchStatus() {
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        return data;
-      } catch (e) {
-        console.error('Failed to fetch status:', e);
-        return null;
+  const grid = document.getElementById('grid');
+  const status = document.getElementById('status');
+
+  let foundCells = new Set();
+
+  // Helper: fetch statuses from Google Sheet API
+  async function fetchStatuses() {
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      return data;
+    } catch (e) {
+      console.error('Failed to fetch statuses:', e);
+      return null;
+    }
+  }
+
+  // Helper: update Google Sheet when all are found
+  async function updateGoogleSheetStatus() {
+    // You must implement POST or update method in your Apps Script
+    // This is a placeholder for calling that API.
+    // For demo, we just log:
+    console.log('All fuel cells found! Update Google Sheet: set Sublight Engines ON');
+
+    // Example POST (replace with your real POST endpoint if you add it)
+    /*
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({system: 'Sublight Engines', status: 'ON'}),
+    });
+    */
+  }
+
+  // Create a single card element
+  function createCard(i) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.index = i;
+
+    const front = document.createElement('div');
+    front.className = 'card-inner card-front';
+    front.textContent = i + 1;
+
+    const back = document.createElement('div');
+    back.className = 'card-inner card-back';
+
+    const prompt = document.createElement('div');
+    prompt.textContent = 'Enter letter:';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 1;
+    input.className = 'letter-input';
+    input.autocomplete = 'off';
+    input.autocorrect = 'off';
+    input.spellcheck = false;
+    input.style.textTransform = 'uppercase';
+
+    back.appendChild(prompt);
+    back.appendChild(input);
+
+    card.appendChild(front);
+    card.appendChild(back);
+
+    // Flip card on click only if not found and not flipped
+    card.addEventListener('click', () => {
+      if (card.classList.contains('found')) return;
+      if (!card.classList.contains('flipped')) {
+        card.classList.add('flipped');
+        input.focus();
       }
-    }
+    });
 
-    async function updateStatusOnServer(index, newStatus) {
-      // Existing API is GET only, so we simulate turning "ON" by just POSTing with no API (modify if needed)
-      // If your existing Google Apps Script supports POST to update status, use that here:
-      // Otherwise, you might need to extend the Apps Script to allow POST.
-      // For now, just a simple fetch to simulate.
-      
-      // For demo, just do nothing.
-      // Replace this with actual POST to update fuel cell i to "ON" if available.
-      // Example:
-      /*
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({fuelCell: index + 1, status: "ON"}),
-      });
-      */
-    }
+    // When input changes, check letter
+    input.addEventListener('keyup', async (e) => {
+      if (e.key === 'Enter') {
+        const val = input.value.toUpperCase();
+        if (val === correctLetters[i]) {
+          card.classList.add('found');
+          card.classList.remove('flipped');
+          foundCells.add(i);
+          updateStatus();
 
-    function createGrid() {
-      for (let i = 1; i <= 10; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.textContent = i;
-        cell.dataset.index = i - 1;
-        cell.addEventListener('click', async () => {
-          const idx = parseInt(cell.dataset.index);
-          if (!foundCells.includes(idx)) {
-            foundCells.push(idx);
-            cell.classList.add('found');
-            await updateStatusOnServer(idx, 'ON');
-            updateStatus();
+          if (foundCells.size === 10) {
+            status.textContent = 'ENGINES ONLINE! All fuel cells activated!';
+            status.style.color = '#0f0';
+
+            // Update Google Sheet for system ON
+            await updateGoogleSheetStatus();
           }
-        });
-        grid.appendChild(cell);
-      }
-    }
-
-    function updateStatus() {
-      if (foundCells.length === 10) {
-        status.textContent = 'ENGINES ONLINE! All fuel cells activated!';
-        status.style.color = '#0f0';
-      } else {
-        status.textContent = `Fuel cells activated: ${foundCells.length} / 10`;
-        status.style.color = '#00ff99';
-      }
-    }
-
-    async function initialize() {
-      createGrid();
-
-      const statuses = await fetchStatus();
-      if (!statuses) return;
-
-      // The first 10 statuses in the sheet are for Sublight Engines fuel cells.
-      // The API returns an array like ["ON","OFF","ON",...]
-      for (let i = 0; i < 10; i++) {
-        if (statuses[i] === 'ON') {
-          foundCells.push(i);
-          const cell = grid.querySelector(`.cell[data-index="${i}"]`);
-          if (cell) cell.classList.add('found');
+        } else {
+          alert('Incorrect letter, try again!');
+          input.value = '';
+          input.focus();
         }
+      }
+    });
+
+    return card;
+  }
+
+  // Update the status text and cards if all found
+  function updateStatus() {
+    if (foundCells.size === 10) {
+      status.textContent = 'ENGINES ONLINE! All fuel cells activated!';
+      status.style.color = '#0f0';
+    } else {
+      status.textContent = `Fuel cells activated: ${foundCells.size} / 10`;
+      status.style.color = '#00ff99';
+    }
+  }
+
+  // Initialize grid and load statuses
+  async function init() {
+    // Create cards
+    for (let i = 0; i < 10; i++) {
+      const card = createCard(i);
+      grid.appendChild(card);
+    }
+
+    // Fetch existing statuses from Google Sheet
+    const statuses = await fetchStatuses();
+    if (!statuses) {
+      status.textContent = 'Failed to load progress from server.';
+      status.style.color = '#f00';
+      return;
+    }
+
+    // If the "Sublight Engines" system is ON (assumed index 0), mark all found
+    // The API returns 11 statuses; here we check index 0 for sublight engines
+    if (statuses[0] === 'ON') {
+      for (let i = 0; i < 10; i++) {
+        foundCells.add(i);
+        const card = grid.querySelector(`.card[data-index="${i}"]`);
+        if (card) card.classList.add('found');
       }
       updateStatus();
     }
+  }
 
-    initialize();
-  </script>
+  init();
+</script>
 </body>
 </html>
