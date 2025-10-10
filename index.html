@@ -95,6 +95,9 @@
       cursor: pointer;
       user-select: none;
       z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .main-button {
@@ -102,28 +105,64 @@
       height: 220px;
       background: #11181f;
       border-radius: 40px;
-      border: 4px solid transparent;
-      box-shadow:
-        inset 0 0 30px #007f44,
-        0 0 30px #00ff99;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: #00ff99;
+      border: 10px solid transparent; /* thick border for glow ring */
+      position: relative;
       font-weight: 900;
       letter-spacing: 0.1em;
       font-size: 2.6rem;
-      position: relative;
-      transition: box-shadow 0.3s ease, color 0.3s ease;
+      color: #00ff99;
+      text-align: center;
+      line-height: 220px;
+      text-shadow: 0 0 12px #00ff99;
+      transition: color 0.3s ease;
+      box-shadow:
+        inset 0 0 30px #007f44,
+        0 0 30px #00ff99;
       z-index: 2;
     }
 
     .main-button.off {
+      color: #ff3b3b;
+      text-shadow: 0 0 12px #ff3b3b;
       box-shadow:
         inset 0 0 30px #7f0000,
         0 0 30px #ff3b3b;
-      color: #ff3b3b;
+    }
+
+    /* Circular segmented glowing border ring using conic-gradient */
+
+    .main-button-container::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      z-index: 1;
+      pointer-events: none;
+      user-select: none;
+
+      /* The conic-gradient simulates 11 segments:
+         green segments are ON, red segments are OFF */
+
+      background:
+        conic-gradient(
+          #0f0 0deg 32.7deg,  /* 360/11 = ~32.7deg */
+          #700 32.7deg 65.4deg,
+          #0f0 65.4deg 98.1deg,
+          #700 98.1deg 130.8deg,
+          #0f0 130.8deg 163.5deg,
+          #700 163.5deg 196.2deg,
+          #0f0 196.2deg 228.9deg,
+          #700 228.9deg 261.6deg,
+          #0f0 261.6deg 294.3deg,
+          #700 294.3deg 327deg,
+          #0f0 327deg 360deg
+        );
+      box-shadow:
+        0 0 40px #00ff00;
+      filter: drop-shadow(0 0 20px #00ff00);
     }
 
     /* Light indicator */
@@ -146,39 +185,6 @@
       background: #0f0;
       box-shadow: 0 0 18px #0f0;
       border-color: #0a0;
-    }
-
-    /* Circular segmented border for main button */
-
-    .progress-circle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 260px;
-      height: 260px;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      user-select: none;
-      z-index: 1;
-    }
-
-    .progress-segment {
-      position: absolute;
-      width: 20px;
-      height: 8px;
-      background: #ff3b3b; /* red by default */
-      border-radius: 4px;
-      box-shadow:
-        0 0 6px #7f0000;
-      transition: background 0.4s ease, box-shadow 0.4s ease;
-      transform-origin: center;
-    }
-
-    .progress-segment.on {
-      background: #0f0;
-      box-shadow:
-        0 0 10px #0f0;
     }
 
   </style>
@@ -229,33 +235,6 @@
 
       mainContainer.appendChild(mainButton);
 
-      // Create circular progress border segments (11 segments)
-      const progressCircle = document.createElement('div');
-      progressCircle.className = 'progress-circle';
-
-      for (let i = 0; i < 11; i++) {
-        const segment = document.createElement('div');
-        segment.className = 'progress-segment';
-        segment.id = `progress-segment-${i}`;
-
-        // Position the segments evenly spaced in a circle
-        const angle = (i / 11) * 360 - 90; // start at top (-90deg)
-        // Place segment at radius 125px from center of progressCircle (half width 130 - segment width/2)
-        const radius = 125;
-
-        // Calculate x,y relative to center
-        const rad = angle * Math.PI / 180;
-        const x = 130 + radius * Math.cos(rad) - 10; // 10 = half segment width
-        const y = 130 + radius * Math.sin(rad) - 4;  // 4 = half segment height
-
-        segment.style.left = `${x}px`;
-        segment.style.top = `${y}px`;
-        segment.style.transform = `rotate(${angle + 90}deg)`; // rotate so segment aligns tangentially
-
-        progressCircle.appendChild(segment);
-      }
-
-      mainContainer.appendChild(progressCircle);
       dashboard.appendChild(mainContainer);
 
       // Add click event to main button
@@ -300,22 +279,43 @@
           const container = dashboard.children[i];
           const button = container.querySelector('.button');
           const light = container.querySelector('.light');
-          const progressSegment = document.getElementById(`progress-segment-${i}`);
 
           if (statuses[i] === 'ON') {
             button.classList.remove('off');
             light.classList.add('on');
-            progressSegment.classList.add('on');
           } else {
             button.classList.add('off');
             light.classList.remove('on');
-            progressSegment.classList.remove('on');
           }
         }
 
-        // Optionally update main button style based on overall status
-        const allOn = statuses.every(status => status === 'ON');
-        const mainButton = dashboard.children[11].querySelector('.main-button');
+        // Update main button ring segments dynamically by updating the conic-gradient
+
+        const mainButtonContainer = dashboard.querySelector('.main-button-container');
+
+        // Build gradient string based on status array: green segment if ON else dark red
+        let gradientParts = [];
+        const segmentAngle = 360 / 11;
+
+        for (let i = 0; i < 11; i++) {
+          const startAngle = (i * segmentAngle);
+          const endAngle = startAngle + segmentAngle * 0.9; // slight gap for separation
+          const color = statuses[i] === 'ON' ? '#0f0' : '#700000';
+
+          gradientParts.push(`${color} ${startAngle}deg ${endAngle}deg`);
+          // Gap part is transparent, so next start angle is endAngle to next segment start
+          if(i < 10) {
+            gradientParts.push(`#11181f ${endAngle}deg ${(startAngle + segmentAngle)}deg`);
+          }
+        }
+
+        const gradientStr = `conic-gradient(${gradientParts.join(',')})`;
+
+        mainButtonContainer.style.setProperty('--progress-gradient', gradientStr);
+
+        // Update main button glow color based on overall status
+        const allOn = statuses.every(s => s === 'ON');
+        const mainButton = mainButtonContainer.querySelector('.main-button');
         if (allOn) {
           mainButton.classList.remove('off');
         } else {
@@ -344,5 +344,30 @@
       positionButtons(buttons, centerX, centerY, radius);
     });
   </script>
+  <style>
+    /* This style applies the dynamic conic-gradient ring to main button container */
+
+    .main-button-container {
+      --progress-gradient: conic-gradient(#700000 0deg 360deg);
+      box-shadow:
+        0 0 40px #00ff00;
+      filter: drop-shadow(0 0 20px #00ff00);
+    }
+
+    .main-button-container::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      z-index: 1;
+      pointer-events: none;
+      user-select: none;
+      background: var(--progress-gradient);
+      transition: background 0.5s ease;
+    }
+  </style>
 </body>
 </html>
