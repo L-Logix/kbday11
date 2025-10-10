@@ -192,7 +192,22 @@
 
         const button = document.createElement('a');
         button.className = 'button';
-        button.textContent = `Btn ${i + 1}`;
+        const systemNames = [
+  'Sublight Engines',
+  'Hyperdrive',
+  'Hyperdrive Motivator',
+  'Power Reactor',
+  'Deflector Shields',
+  'Hull',
+  'Weapons',
+  'Tractor Beams',
+  'Bridge/Cockpit',
+  'Navicomputer',
+  'Life Support'
+];
+
+button.textContent = systemNames[i];
+
         button.href = buttonLinks[i];
         button.target = '_blank'; // open in new tab, optional
         button.rel = 'noopener noreferrer';
