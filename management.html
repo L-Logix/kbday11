@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Management Dashboard</title>
+  <style>
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: #111;
+      color: #0ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      max-width: 600px;
+    }
+
+    .control {
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #0ff;
+      text-align: center;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    .status-light {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin: 10px auto;
+      background-color: red;
+      box-shadow: 0 0 8px red;
+    }
+
+    .status-online {
+      background-color: #0f0;
+      box-shadow: 0 0 8px #0f0;
+    }
+
+    button {
+      background: #0ff;
+      color: #000;
+      border: none;
+      padding: 10px 15px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background: #0cc;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🛠 Management Panel</h1>
+  <div class="button-grid" id="controls">
+    <!-- Buttons will be injected by JavaScript -->
+  </div>
+
+  <script>
+    const controls = document.getElementById("controls");
+    let status = JSON.parse(localStorage.getItem("buttonStatus") || "[]");
+    if (status.length !== 11) status = Array(11).fill(false);
+
+    function renderControls() {
+      controls.innerHTML = '';
+      status.forEach((on, i) => {
+        const div = document.createElement("div");
+        div.className = "control";
+
+        const light = document.createElement("div");
+        light.className = `status-light ${on ? 'status-online' : ''}`;
+
+        const btn = document.createElement("button");
+        btn.innerText = on ? "Turn RED" : "Turn GREEN";
+        btn.onclick = () => {
+          status[i] = !status[i];
+          localStorage.setItem("buttonStatus", JSON.stringify(status));
+          renderControls(); // Refresh UI
+        };
+
+        div.innerHTML = `<strong>Button ${i + 1}</strong>`;
+        div.appendChild(light);
+        div.appendChild(btn);
+        controls.appendChild(div);
+      });
+    }
+
+    renderControls();
+  </script>
+</body>
+</html>
