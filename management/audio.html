@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Spaceship Audio Messages</title>
+  <style>
+    body {
+      background: #0b0c0f;
+      color: #00ff99;
+      font-family: 'Orbitron', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 50px;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px #00ff99;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      width: 80%;
+      max-width: 800px;
+    }
+
+    button {
+      background: #11181f;
+      border: 2px solid #00ff99;
+      border-radius: 10px;
+      color: #00ff99;
+      padding: 20px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00ff99;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00ff99;
+    }
+  </style>
+</head>
+<body>
+  <h1>Spaceship Audio Messages</h1>
+  <div class="button-grid" id="audioButtons"></div>
+
+  <audio id="audioPlayer" src=""></audio>
+
+  <script>
+    const systems = [
+      "Sublight Engines",
+      "Hyperdrive",
+      "Hyperdrive Motivator",
+      "Power Reactor",
+      "Deflector Shields",
+      "Hull",
+      "Weapons",
+      "Tractor Beams",
+      "Bridge / Cockpit",
+      "Navicomputer",
+      "Life Support",
+      "Mission Complete"
+    ];
+
+    const buttonContainer = document.getElementById("audioButtons");
+    const audioPlayer = document.getElementById("audioPlayer");
+
+    systems.forEach((name, index) => {
+      const fileNumber = 6 + index; // 6 to 17
+      const button = document.createElement("button");
+      button.textContent = name;
+      button.onclick = () => {
+        audioPlayer.src = `/kbday11/screen-capture (${fileNumber}).mp3`;
+        audioPlayer.play();
+      };
+      buttonContainer.appendChild(button);
+    });
+  </script>
+</body>
+</html>
