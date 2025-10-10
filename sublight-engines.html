@@ -178,23 +178,14 @@
     const resetBtn = document.getElementById('resetBtn');
     const completedMessage = document.getElementById('completedMessage');
 
-    // The 10 letters for the fuel cells challenge (randomized order)
-    // Correct letters for each card:
-    // We'll map card numbers 1-10 to letters:
-    // Let's say the letters are: F, U, E, L, C, E, L, L, S, X (just an example)
-    // The idea is to guess each letter for each number.
     const correctLetters = ['F', 'U', 'E', 'L', 'C', 'E', 'L', 'L', 'S', 'X'];
 
-    // Card state
-    // { attempts: number, correct: boolean }
     let cardStates = [];
 
-    // Track how many cards are correct
     function countCorrect() {
       return cardStates.filter(c => c.correct).length;
     }
 
-    // Shuffle function for card order
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -203,12 +194,9 @@
       return array;
     }
 
-    // Create the cards with randomized order
     function createCards() {
       cardsContainer.innerHTML = '';
       cardStates = [];
-
-      // Create array 0-9 for indices
       let indices = [...Array(10).keys()];
       shuffle(indices);
 
@@ -225,7 +213,7 @@
 
         const front = document.createElement('div');
         front.className = 'front';
-        front.textContent = (idx + 1); // number 1 to 10
+        front.textContent = (idx + 1);
 
         const back = document.createElement('div');
         back.className = 'back';
@@ -247,25 +235,21 @@
 
         cardsContainer.appendChild(card);
 
-        // Click flips card
         card.addEventListener('click', () => {
-          if (cardStates[idx].correct) return; // don't flip correct cards
+          if (cardStates[idx].correct) return;
           card.classList.toggle('flipped');
           if (card.classList.contains('flipped')) {
             input.focus();
           }
         });
 
-        // Prevent flipping by clicking on back when already flipped
         back.addEventListener('click', e => e.stopPropagation());
 
-        // Submit button handler
         submitBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           checkAnswer(idx, input.value.trim().toUpperCase(), card, input);
         });
 
-        // Allow Enter key to submit
         input.addEventListener('keydown', e => {
           if (e.key === 'Enter') {
             e.preventDefault();
@@ -275,7 +259,6 @@
       }
     }
 
-    // Check answer for a card
     function checkAnswer(idx, letter, card, input) {
       if (!letter.match(/^[A-Z]$/)) {
         alert('Please enter a valid single letter A-Z');
@@ -284,19 +267,18 @@
         return;
       }
 
-      if (cardStates[idx].correct) return; // already correct
+      if (cardStates[idx].correct) return;
 
       if (letter === correctLetters[idx]) {
-        // Correct answer
         cardStates[idx].correct = true;
         card.classList.remove('flipped');
-        card.querySelector('.front').style.background = '#007f44'; // green
-        card.querySelector('.front').style.color = '#0f0';
-        card.querySelector('.front').style.boxShadow = 'inset 0 0 20px #0f7000, 0 0 20px #0f0';
+        const front = card.querySelector('.front');
+        front.style.background = '#007f44';
+        front.style.color = '#0f0';
+        front.style.boxShadow = 'inset 0 0 20px #0f7000, 0 0 20px #0f0';
         updateStatusText();
         checkCompletion();
       } else {
-        // Incorrect
         cardStates[idx].attempts++;
         if (cardStates[idx].attempts >= 5) {
           alert('5 incorrect attempts on this card - Progress reset!');
@@ -309,13 +291,11 @@
       }
     }
 
-    // Update the status message
     function updateStatusText() {
       const correctCount = countCorrect();
       statusDiv.textContent = `Fuel Cells Activated: ${correctCount} / 10`;
     }
 
-    // Reset progress
     function resetProgress() {
       cardStates = cardStates.map(() => ({ attempts: 0, correct: false }));
       createCards();
@@ -323,16 +303,14 @@
       completedMessage.textContent = '';
     }
 
-    // Check if all cards are correct
     function checkCompletion() {
       if (countCorrect() === 10) {
         completedMessage.textContent = 'All Fuel Cells Activated! Sublight Engines Online!';
-        updateSheetStatus('ON');
+        setLight(0, 'ON');  // index 0 for Light 1
         disableChallenge();
       }
     }
 
-    // Disable challenge if already ON
     function disableChallenge() {
       cardsContainer.style.pointerEvents = 'none';
       resetBtn.disabled = true;
@@ -341,14 +319,11 @@
       statusDiv.style.textShadow = '0 0 15px #0f0';
     }
 
-    // Fetch current status from sheet
     async function fetchStatus() {
       try {
         const res = await fetch(API_URL);
-        const data = await res.json();
-
-        // data is array of statuses for all lights, index 0 = Light 1
-        if (data[0] === 'ON') {
+        const statuses = await res.json();
+        if (statuses[0] === 'ON') {
           disableChallenge();
         } else {
           updateStatusText();
@@ -359,32 +334,24 @@
       }
     }
 
-    // Update sheet status for Light 1
-    async function updateSheetStatus(newStatus) {
+    // Your provided POST style using query params and POST method:
+    async function setLight(index, status) {
       try {
-        const res = await fetch(API_URL, {
+        await fetch(`${API_URL}?index=${index}&status=${status}`, {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            id: 1, // Sublight Engines = Light 1
-            status: newStatus
-          })
         });
-        if (!res.ok) throw new Error('Network response was not ok');
       } catch (e) {
-        console.error('Failed to update sheet status:', e);
+        console.error("Failed to update light:", e);
         alert('Failed to update server status. Check your connection.');
       }
     }
 
-    // Reset progress button
     resetBtn.addEventListener('click', () => {
       if(confirm('Are you sure you want to reset your progress?')) {
         resetProgress();
       }
     });
 
-    // Initialize
     createCards();
     fetchStatus();
 
