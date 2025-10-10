@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spaceship Control Panel</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background-color: #000;
+      color: #0ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin: 20px;
+      color: #0ff;
+      text-shadow: 0 0 10px #0ff;
+    }
+
+    .dashboard {
+      position: relative;
+      width: 600px;
+      height: 600px;
+      border: 2px solid #0ff;
+      border-radius: 50%;
+      box-shadow: 0 0 40px #0ff inset, 0 0 20px #0ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .button-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    .control-button {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #111;
+      border: 2px solid #0ff;
+      box-shadow: 0 0 10px #0ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #0ff;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .control-button:hover {
+      background: #0ff;
+      color: #000;
+    }
+
+    .status-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #ff0000;
+      box-shadow: 0 0 6px #f00;
+      margin-top: 6px;
+    }
+
+    .status-online {
+      background-color: #00ff00;
+      box-shadow: 0 0 8px #0f0;
+    }
+
+    .main-button {
+      width: 120px;
+      height: 120px;
+      background: #0ff;
+      color: #000;
+      border: 4px solid #000;
+      font-weight: bold;
+      font-size: 1.1em;
+      box-shadow: 0 0 20px #0ff, 0 0 10px #0ff inset;
+    }
+
+    /* Positioning 11 buttons in a circle */
+    /* Uses trigonometry-like offsets for aesthetics */
+    .pos1  { top: 5%;    left: 45%; }
+    .pos2  { top: 15%;   left: 70%; }
+    .pos3  { top: 35%;   left: 85%; }
+    .pos4  { top: 60%;   left: 80%; }
+    .pos5  { top: 80%;   left: 60%; }
+    .pos6  { top: 88%;   left: 35%; }
+    .pos7  { top: 75%;   left: 15%; }
+    .pos8  { top: 50%;   left: 5%;  }
+    .pos9  { top: 25%;   left: 10%; }
+    .pos10 { top: 10%;   left: 30%; }
+    .pos11 { top: 50%;   left: 90%; }
+
+  </style>
+</head>
+<body>
+
+  <h1>🚀 SPACESHIP CONTROL PANEL</h1>
+
+  <div class="dashboard">
+    <div class="button-container">
+
+      <!-- 11 control buttons with lights -->
+      <div class="control-button pos1">Btn 1 <div class="status-light status-online"></div></div>
+      <div class="control-button pos2">Btn 2 <div class="status-light"></div></div>
+      <div class="control-button pos3">Btn 3 <div class="status-light status-online"></div></div>
+      <div class="control-button pos4">Btn 4 <div class="status-light"></div></div>
+      <div class="control-button pos5">Btn 5 <div class="status-light status-online"></div></div>
+      <div class="control-button pos6">Btn 6 <div class="status-light"></div></div>
+      <div class="control-button pos7">Btn 7 <div class="status-light status-online"></div></div>
+      <div class="control-button pos8">Btn 8 <div class="status-light"></div></div>
+      <div class="control-button pos9">Btn 9 <div class="status-light status-online"></div></div>
+      <div class="control-button pos10">Btn 10 <div class="status-light"></div></div>
+      <div class="control-button pos11">Btn 11 <div class="status-light status-online"></div></div>
+
+      <!-- Main central button -->
+      <div class="control-button main-button">MAIN</div>
+    </div>
+  </div>
+
+</body>
+</html>
