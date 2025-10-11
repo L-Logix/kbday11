@@ -2,12 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hyperdrive Frequencies</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Spaceship Dashboard - Hyperdrive Frequencies</title>
   <style>
     body {
-      background-color: #050505;
+      background: #000;
       color: #00eaff;
       font-family: 'Orbitron', sans-serif;
       text-align: center;
@@ -16,6 +14,10 @@
     h1 {
       font-size: 2em;
       text-shadow: 0 0 10px #00eaff;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #66ffff;
     }
     .frequency-panel {
       display: grid;
@@ -61,10 +63,10 @@
 </head>
 <body>
   <h1>Hyperdrive Frequency Alignment</h1>
-  <p>Select the correct 4 transmission frequencies to engage the Hyperdrive.</p>
+  <p>Select the correct four transmission frequencies to engage the hyperdrive.</p>
 
   <div class="frequency-panel">
-    <!-- Generate buttons 0–10 -->
+    <!-- 11 frequency buttons -->
     <button class="freq-btn" data-value="0">0</button>
     <button class="freq-btn" data-value="1">1</button>
     <button class="freq-btn" data-value="2">2</button>
@@ -81,6 +83,7 @@
   <div id="status"></div>
 
   <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
     const correctSequence = ["2", "0", "1", "4"];
     const chosen = [];
     const buttons = document.querySelectorAll(".freq-btn");
@@ -91,18 +94,19 @@
         btn.classList.add("active");
         chosen.push(btn.dataset.value);
 
-        if (chosen.length === 4) {
-          checkSequence();
-        }
+        if (chosen.length === 4) checkSequence();
       });
     });
 
-    function checkSequence() {
+    async function checkSequence() {
       const isCorrect = JSON.stringify(chosen) === JSON.stringify(correctSequence);
       if (isCorrect) {
         status.textContent = "✅ Hyperdrive frequencies aligned!";
         status.className = "success";
-        sendToSheet();
+        await sendToSheet();
+        setTimeout(() => {
+          status.textContent = "🌀 Engaging Hyperdrive...";
+        }, 1000);
       } else {
         status.textContent = "⚠️ Empire signal detected! Resetting frequencies...";
         status.className = "error";
@@ -118,17 +122,15 @@
       }, 2000);
     }
 
-    function sendToSheet() {
-      fetch("https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec", {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({ task: "hyperdrive", status: "complete" })
-      });
-      // Add a little animation for success
-      document.body.style.boxShadow = "0 0 40px #0f0";
-      setTimeout(() => {
-        document.body.style.boxShadow = "";
-      }, 1000);
+    async function sendToSheet() {
+      try {
+        await fetch(`${API_URL}?index=hyperdrive&status=COMPLETE`, {
+          method: "POST",
+        });
+        console.log("✅ Sheet updated for Hyperdrive");
+      } catch (e) {
+        console.error("Failed to send update:", e);
+      }
     }
   </script>
 </body>
