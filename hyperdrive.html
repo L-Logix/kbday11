@@ -66,7 +66,6 @@
   <p>Select the correct four transmission frequencies to engage the hyperdrive.</p>
 
   <div class="frequency-panel">
-    <!-- 11 frequency buttons -->
     <button class="freq-btn" data-value="0">0</button>
     <button class="freq-btn" data-value="1">1</button>
     <button class="freq-btn" data-value="2">2</button>
@@ -93,7 +92,6 @@
       btn.addEventListener("click", () => {
         btn.classList.add("active");
         chosen.push(btn.dataset.value);
-
         if (chosen.length === 4) checkSequence();
       });
     });
@@ -103,13 +101,14 @@
       if (isCorrect) {
         status.textContent = "✅ Hyperdrive frequencies aligned!";
         status.className = "success";
-        await sendToSheet();
+        await updateHyperdrive("ON");
         setTimeout(() => {
           status.textContent = "🌀 Engaging Hyperdrive...";
         }, 1000);
       } else {
         status.textContent = "⚠️ Empire signal detected! Resetting frequencies...";
         status.className = "error";
+        await updateHyperdrive("OFF");
         resetButtons();
       }
     }
@@ -122,12 +121,12 @@
       }, 2000);
     }
 
-    async function sendToSheet() {
+    async function updateHyperdrive(state) {
       try {
-        await fetch(`${API_URL}?index=hyperdrive&status=COMPLETE`, {
+        await fetch(`${API_URL}?index=2&status=${state}`, {
           method: "POST",
         });
-        console.log("✅ Sheet updated for Hyperdrive");
+        console.log(`Hyperdrive status updated to ${state}`);
       } catch (e) {
         console.error("Failed to send update:", e);
       }
