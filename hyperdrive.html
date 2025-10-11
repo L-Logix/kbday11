@@ -2,112 +2,167 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Spaceship Dashboard - Hyperdrive Frequencies</title>
+  <title>Spaceship Terminal - Hyperdrive Alignment</title>
   <style>
     body {
       background: #000;
-      color: #00eaff;
-      font-family: 'Orbitron', sans-serif;
-      text-align: center;
+      color: #0f0;
+      font-family: 'Share Tech Mono', monospace;
+      text-align: left;
       padding: 40px;
     }
-    h1 {
-      font-size: 2em;
-      text-shadow: 0 0 10px #00eaff;
-      margin-bottom: 10px;
+
+    #terminal {
+      max-width: 700px;
+      margin: 0 auto;
+      border: 1px solid #0f0;
+      border-radius: 8px;
+      padding: 30px;
+      background: #010;
+      box-shadow: 0 0 20px rgba(0,255,0,0.3);
     }
-    p {
-      color: #66ffff;
+
+    .line {
+      margin: 8px 0;
+      white-space: pre;
     }
+
     .frequency-panel {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
-      max-width: 400px;
-      margin: 40px auto;
+      gap: 10px;
+      margin-top: 20px;
     }
+
     .freq-btn {
-      padding: 20px;
-      background-color: #0b1a1f;
-      border: 2px solid #00eaff;
-      border-radius: 10px;
-      color: #00eaff;
-      font-size: 1.5em;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-      box-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
-    }
-    .freq-btn:hover {
-      background-color: #00eaff;
-      color: #000;
-      box-shadow: 0 0 20px #00eaff;
-    }
-    .freq-btn.active {
-      background-color: #00eaff;
-      color: #000;
-    }
-    #status {
-      margin-top: 25px;
-      font-size: 1.2em;
-      height: 40px;
-    }
-    .success {
+      background: #000;
       color: #0f0;
-      text-shadow: 0 0 10px #0f0;
+      border: 1px solid #0f0;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.2em;
+      padding: 10px 0;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.2s;
     }
-    .error {
-      color: #f00;
-      text-shadow: 0 0 10px #f00;
+
+    .freq-btn:hover {
+      background: #0f0;
+      color: #000;
+      box-shadow: 0 0 10px #0f0;
+    }
+
+    .freq-btn.active {
+      background: #0f0;
+      color: #000;
+    }
+
+    .disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    .success { color: #0f0; }
+    .error { color: #f00; }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      background: #0f0;
+      margin-left: 5px;
+      animation: blink 1s step-start infinite;
     }
   </style>
 </head>
 <body>
-  <h1>Hyperdrive Frequency Alignment</h1>
-  <p>Select the correct four transmission frequencies to engage the hyperdrive.</p>
+  <div id="terminal">
+    <div class="line">> INITIALIZING HYPERDRIVE TERMINAL...</div>
+    <div class="line">> SYSTEM CHECK IN PROGRESS...</div>
+    <div id="status-line" class="line"></div>
 
-  <div class="frequency-panel">
-    <button class="freq-btn" data-value="0">0</button>
-    <button class="freq-btn" data-value="1">1</button>
-    <button class="freq-btn" data-value="2">2</button>
-    <button class="freq-btn" data-value="3">3</button>
-    <button class="freq-btn" data-value="4">4</button>
-    <button class="freq-btn" data-value="5">5</button>
-    <button class="freq-btn" data-value="6">6</button>
-    <button class="freq-btn" data-value="7">7</button>
-    <button class="freq-btn" data-value="8">8</button>
-    <button class="freq-btn" data-value="9">9</button>
-    <button class="freq-btn" data-value="10">10</button>
+    <div id="frequency-container" style="display:none;">
+      <div class="line">> ENTER CORRECT 4-FREQUENCY SEQUENCE TO ENGAGE HYPERDRIVE:</div>
+      <div class="frequency-panel" id="freq-panel"></div>
+      <div id="status"></div>
+    </div>
+    <div id="cursor" class="cursor"></div>
   </div>
-
-  <div id="status"></div>
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
     const correctSequence = ["2", "0", "1", "4"];
     const chosen = [];
-    const buttons = document.querySelectorAll(".freq-btn");
-    const status = document.getElementById("status");
+    const statusEl = document.getElementById("status");
+    const statusLine = document.getElementById("status-line");
+    const freqPanel = document.getElementById("freq-panel");
+    const freqContainer = document.getElementById("frequency-container");
+    const cursor = document.getElementById("cursor");
 
-    buttons.forEach(btn => {
+    // Create frequency buttons
+    for (let i = 0; i <= 10; i++) {
+      const btn = document.createElement("button");
+      btn.className = "freq-btn";
+      btn.textContent = i;
+      btn.dataset.value = i;
       btn.addEventListener("click", () => {
         btn.classList.add("active");
         chosen.push(btn.dataset.value);
         if (chosen.length === 4) checkSequence();
       });
-    });
+      freqPanel.appendChild(btn);
+    }
+
+    // Initialize
+    async function init() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        const hyperdriveStatus = data[2]; // index 2 is hyperdrive
+
+        if (hyperdriveStatus === "ON") {
+          statusLine.textContent = "> HYPERDRIVE STATUS: ONLINE";
+          appendLine("> ACCESS LOCKED - SYSTEM ALREADY ENGAGED");
+          lockTerminal();
+        } else {
+          statusLine.textContent = "> HYPERDRIVE STATUS: OFFLINE";
+          appendLine("> ACCESS GRANTED");
+          freqContainer.style.display = "block";
+        }
+      } catch (e) {
+        statusLine.textContent = "> ERROR: Unable to contact control system.";
+        console.error(e);
+      }
+    }
+
+    function appendLine(text) {
+      const line = document.createElement("div");
+      line.className = "line";
+      line.textContent = text;
+      cursor.before(line);
+    }
 
     async function checkSequence() {
       const isCorrect = JSON.stringify(chosen) === JSON.stringify(correctSequence);
       if (isCorrect) {
-        status.textContent = "✅ Hyperdrive frequencies aligned!";
-        status.className = "success";
+        appendLine("> FREQUENCIES ACCEPTED");
+        appendLine("> ALIGNMENT COMPLETE");
+        statusEl.textContent = "✅ Hyperdrive Engaged";
+        statusEl.className = "success";
         await updateHyperdrive("ON");
-        setTimeout(() => {
-          status.textContent = "🌀 Engaging Hyperdrive...";
-        }, 1000);
+        lockTerminal();
       } else {
-        status.textContent = "⚠️ Empire signal detected! Resetting frequencies...";
-        status.className = "error";
+        appendLine("> WARNING: EMPIRE SIGNAL DETECTED");
+        statusEl.textContent = "⚠️ Incorrect Sequence";
+        statusEl.className = "error";
         await updateHyperdrive("OFF");
         resetButtons();
       }
@@ -116,21 +171,27 @@
     function resetButtons() {
       setTimeout(() => {
         chosen.length = 0;
-        buttons.forEach(btn => btn.classList.remove("active"));
-        status.textContent = "";
+        document.querySelectorAll(".freq-btn").forEach(btn => btn.classList.remove("active"));
+        statusEl.textContent = "";
       }, 2000);
+    }
+
+    function lockTerminal() {
+      document.querySelectorAll(".freq-btn").forEach(btn => btn.classList.add("disabled"));
+      freqContainer.style.opacity = "0.5";
+      cursor.style.display = "none";
     }
 
     async function updateHyperdrive(state) {
       try {
-        await fetch(`${API_URL}?index=1&status=${state}`, {
-          method: "POST",
-        });
+        await fetch(`${API_URL}?index=2&status=${state}`, { method: "POST" });
         console.log(`Hyperdrive status updated to ${state}`);
       } catch (e) {
         console.error("Failed to send update:", e);
       }
     }
+
+    init();
   </script>
 </body>
 </html>
