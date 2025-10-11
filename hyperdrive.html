@@ -121,12 +121,12 @@
       freqPanel.appendChild(btn);
     }
 
-    // Initialize
+    // Initialize: check current hyperdrive status
     async function init() {
       try {
         const res = await fetch(API_URL);
         const data = await res.json();
-        const hyperdriveStatus = data[2]; // index 2 is hyperdrive
+        const hyperdriveStatus = data[1]; // index 1 = Hyperdrive
 
         if (hyperdriveStatus === "ON") {
           statusLine.textContent = "> HYPERDRIVE STATUS: ONLINE";
