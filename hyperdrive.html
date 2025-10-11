@@ -1,20 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Hyperdrive</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hyperdrive Frequencies</title>
+  <link rel="stylesheet" href="style.css" />
   <style>
-    body { background-color: #0b0c0f; color: #00ff99; font-family: 'Orbitron', sans-serif; padding: 40px; }
-    h1 { font-size: 2em; text-shadow: 0 0 10px #00ff99; }
-    p { font-size: 1.2em; line-height: 1.6; max-width: 800px; }
+    body {
+      background-color: #050505;
+      color: #00eaff;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 2em;
+      text-shadow: 0 0 10px #00eaff;
+    }
+    .frequency-panel {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      max-width: 400px;
+      margin: 40px auto;
+    }
+    .freq-btn {
+      padding: 20px;
+      background-color: #0b1a1f;
+      border: 2px solid #00eaff;
+      border-radius: 10px;
+      color: #00eaff;
+      font-size: 1.5em;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
+    }
+    .freq-btn:hover {
+      background-color: #00eaff;
+      color: #000;
+      box-shadow: 0 0 20px #00eaff;
+    }
+    .freq-btn.active {
+      background-color: #00eaff;
+      color: #000;
+    }
+    #status {
+      margin-top: 25px;
+      font-size: 1.2em;
+      height: 40px;
+    }
+    .success {
+      color: #0f0;
+      text-shadow: 0 0 10px #0f0;
+    }
+    .error {
+      color: #f00;
+      text-shadow: 0 0 10px #f00;
+    }
   </style>
 </head>
 <body>
-  <h1>Hyperdrive</h1>
-  <p>
-    This crucial component allows starships to travel faster than the speed of light by entering an alternate
-    dimension known as hyperspace. A hyperdrive is essential for traversing the vast distances of the galaxy
-    in a timely manner. Its "class" rating indicates its speed, with lower numbers being faster.
-  </p>
+  <h1>Hyperdrive Frequency Alignment</h1>
+  <p>Select the correct 4 transmission frequencies to engage the Hyperdrive.</p>
+
+  <div class="frequency-panel">
+    <!-- Generate buttons 0–10 -->
+    <button class="freq-btn" data-value="0">0</button>
+    <button class="freq-btn" data-value="1">1</button>
+    <button class="freq-btn" data-value="2">2</button>
+    <button class="freq-btn" data-value="3">3</button>
+    <button class="freq-btn" data-value="4">4</button>
+    <button class="freq-btn" data-value="5">5</button>
+    <button class="freq-btn" data-value="6">6</button>
+    <button class="freq-btn" data-value="7">7</button>
+    <button class="freq-btn" data-value="8">8</button>
+    <button class="freq-btn" data-value="9">9</button>
+    <button class="freq-btn" data-value="10">10</button>
+  </div>
+
+  <div id="status"></div>
+
+  <script>
+    const correctSequence = ["2", "0", "1", "4"];
+    const chosen = [];
+    const buttons = document.querySelectorAll(".freq-btn");
+    const status = document.getElementById("status");
+
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        btn.classList.add("active");
+        chosen.push(btn.dataset.value);
+
+        if (chosen.length === 4) {
+          checkSequence();
+        }
+      });
+    });
+
+    function checkSequence() {
+      const isCorrect = JSON.stringify(chosen) === JSON.stringify(correctSequence);
+      if (isCorrect) {
+        status.textContent = "✅ Hyperdrive frequencies aligned!";
+        status.className = "success";
+        sendToSheet();
+      } else {
+        status.textContent = "⚠️ Empire signal detected! Resetting frequencies...";
+        status.className = "error";
+        resetButtons();
+      }
+    }
+
+    function resetButtons() {
+      setTimeout(() => {
+        chosen.length = 0;
+        buttons.forEach(btn => btn.classList.remove("active"));
+        status.textContent = "";
+      }, 2000);
+    }
+
+    function sendToSheet() {
+      fetch("https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec", {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({ task: "hyperdrive", status: "complete" })
+      });
+      // Add a little animation for success
+      document.body.style.boxShadow = "0 0 40px #0f0";
+      setTimeout(() => {
+        document.body.style.boxShadow = "";
+      }, 1000);
+    }
+  </script>
 </body>
 </html>
