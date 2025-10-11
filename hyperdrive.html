@@ -184,7 +184,7 @@
 
     async function updateHyperdrive(state) {
       try {
-        await fetch(`${API_URL}?index=2&status=${state}`, { method: "POST" });
+        await fetch(`${API_URL}?index=1&status=${state}`, { method: "POST" });
         console.log(`Hyperdrive status updated to ${state}`);
       } catch (e) {
         console.error("Failed to send update:", e);
