@@ -2,19 +2,156 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Power Reactor</title>
+  <title>Power Reactor — Critical Alert</title>
   <style>
-    body { background-color: #0b0c0f; color: #00ff99; font-family: 'Orbitron', sans-serif; padding: 40px; }
-    h1 { font-size: 2em; text-shadow: 0 0 10px #00ff99; }
-    p { font-size: 1.2em; line-height: 1.6; max-width: 800px; }
+    body {
+      background: #000;
+      color: #0f0;
+      font-family: 'Share Tech Mono', monospace;
+      margin: 0;
+      padding: 40px;
+    }
+    #terminal {
+      max-width: 760px;
+      margin: 0 auto;
+      border: 1px solid #0f0;
+      border-radius: 8px;
+      padding: 24px;
+      background: #010;
+      box-shadow: 0 0 20px rgba(0,255,0,0.08);
+    }
+    .line { white-space: pre-wrap; margin: 8px 0; }
+    .muted { color: #66ff66a0; }
+    .error { color: #ff6666; }
+    .success { color: #66ff66; font-weight: bold; }
+    .controls { margin-top: 18px; display: flex; gap: 8px; align-items: center; }
+    input[type="text"] {
+      background: #000;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 8px 10px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 16px;
+      border-radius: 4px;
+      width: 200px;
+      outline: none;
+      text-transform: uppercase;
+    }
+    button {
+      background: #000;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 8px 12px;
+      font-family: 'Share Tech Mono', monospace;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover { background: #0f0; color: #000; }
+    button:disabled { opacity: 0.45; pointer-events: none; }
+    #timer { font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>Power Reactor</h1>
-  <p>
-    Providing all the energy for a starship's systems, the power reactor is the ship's heart. It powers everything
-    from the engines and deflector shields to life support and weapons. The X-wing starfighter uses a Novaldex 04-Z
-    cryogenic power generator.
-  </p>
+  <div id="terminal">
+    <div class="line">> POWER REACTOR CRITICAL ALERT</div>
+    <div class="line muted">> TIME TO STABILIZE: <span id="timer">60</span> SECONDS</div>
+    <div class="line muted">> ENTER STABILIZATION MODULES (e.g., BDF):</div>
+
+    <div id="promptArea" class="controls">
+      <input id="answerInput" autocomplete="off" placeholder="Modules" />
+      <button id="submitBtn">STABILIZE</button>
+    </div>
+
+    <div id="feedback" class="line"></div>
+    <div id="lockedArea" class="line success" style="display:none;">
+      > REACTOR STABILIZED — CORE POWER NORMAL  
+      > ACCESS LOCKED — NO FURTHER ACTION
+    </div>
+    <div id="failureArea" class="line error" style="display:none;">
+      > REACTOR OVERLOAD! CORE FAILURE  
+      > TIME EXPIRED
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+      const CORRECT_CODE = 'BDF';
+      const SHEET_INDEX = 3;
+      let timeLeft = 60; // seconds
+      let timerInterval;
+
+      const promptArea = document.getElementById('promptArea');
+      const lockedArea = document.getElementById('lockedArea');
+      const failureArea = document.getElementById('failureArea');
+      const answerInput = document.getElementById('answerInput');
+      const submitBtn = document.getElementById('submitBtn');
+      const feedback = document.getElementById('feedback');
+      const timerDisplay = document.getElementById('timer');
+
+      async function checkStatus() {
+        try {
+          const res = await fetch(API_URL);
+          const data = await res.json();
+          const current = data[SHEET_INDEX];
+          if (current === 'ON') lockSuccess();
+        } catch(e){ /* ignore */ }
+      }
+
+      async function postStatus(state) {
+        try {
+          await fetch(`${API_URL}?index=${SHEET_INDEX}&status=${state}`, { method: 'POST' });
+        } catch(e){ console.error(e); }
+      }
+
+      function lockSuccess() {
+        promptArea.style.display = 'none';
+        lockedArea.style.display = 'block';
+        clearInterval(timerInterval);
+      }
+
+      function lockFailure() {
+        promptArea.style.display = 'none';
+        failureArea.style.display = 'block';
+      }
+
+      function startTimer() {
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          timerDisplay.textContent = timeLeft;
+          if(timeLeft <= 0) {
+            clearInterval(timerInterval);
+            lockFailure();
+          }
+        }, 1000);
+      }
+
+      submitBtn.addEventListener('click', async () => {
+        const val = (answerInput.value || '').trim().toUpperCase();
+        if(!val) { feedback.textContent = '> ENTER MODULES'; feedback.className='line error'; return; }
+
+        if(val === CORRECT_CODE) {
+          feedback.textContent = '> REACTOR STABILIZED — CORE POWER NORMAL';
+          feedback.className = 'line success';
+          submitBtn.disabled = true;
+          answerInput.disabled = true;
+          await postStatus('ON');
+          setTimeout(lockSuccess, 800);
+        } else {
+          feedback.textContent = '> REACTOR UNSTABLE — TRY AGAIN!';
+          feedback.className = 'line error';
+          answerInput.value = '';
+          answerInput.focus();
+        }
+      });
+
+      answerInput.addEventListener('keydown', (e)=>{
+        if(e.key==='Enter') submitBtn.click();
+      });
+
+      checkStatus();
+      startTimer();
+    })();
+  </script>
 </body>
 </html>
