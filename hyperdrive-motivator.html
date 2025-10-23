@@ -47,14 +47,12 @@
     }
     button:hover { background: #0f0; color: #000; }
     button:disabled { opacity: 0.45; pointer-events: none; }
-    .cursor { display: inline-block; width: 10px; height: 18px; background: #0f0; margin-left: 6px; animation: blink 1s steps(2, start) infinite; vertical-align: middle; }
-    @keyframes blink { 50% { opacity: 0; } }
   </style>
 </head>
 <body>
   <div id="terminal">
     <div class="line">> HYPERDRIVE MOTIVATOR ACCESS SYSTEM</div>
-    <div class="line muted">> ENTER RECOVERY CODE TO RESTORE FUNCTION:</div>
+    <div class="line muted">> ENTER TOTAL ENERGY VALUE TO REACTIVATE:</div>
 
     <div id="promptArea" class="controls">
       <input id="answerInput" inputmode="numeric" autocomplete="off" placeholder="Recovery code" />
@@ -66,7 +64,6 @@
       > MOTIVATOR STATUS: ONLINE  
       > ACCESS LOCKED — NO FURTHER ACTION AVAILABLE
     </div>
-    <div id="cursor" class="cursor"></div>
   </div>
 
   <script>
@@ -80,7 +77,6 @@
       const answerInput = document.getElementById('answerInput');
       const submitBtn = document.getElementById('submitBtn');
       const feedback = document.getElementById('feedback');
-      const cursor = document.getElementById('cursor');
 
       async function checkStatus() {
         try {
@@ -90,7 +86,6 @@
           if (current === 'ON') {
             promptArea.style.display = 'none';
             lockedArea.style.display = 'block';
-            cursor.style.display = 'none';
           }
         } catch (err) {
           // fail silently, allow entry
@@ -112,7 +107,6 @@
           feedback.className = 'line success';
           submitBtn.disabled = true;
           answerInput.disabled = true;
-          cursor.style.display = 'none';
           promptArea.style.opacity = '0.5';
           await postStatus('ON');
           setTimeout(() => {
