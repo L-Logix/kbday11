@@ -1,20 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Navicomputer / Astromech</title>
-  <style>
-    body { background-color: #0b0c0f; color: #00ff99; font-family: 'Orbitron', sans-serif; padding: 40px; }
-    h1 { font-size: 2em; text-shadow: 0 0 10px #00ff99; }
-    p { font-size: 1.2em; line-height: 1.6; max-width: 800px; }
-  </style>
+<meta charset="UTF-8">
+<title>Navicomputer Challenge - Leaflet</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<style>
+  body { margin:0; padding:0; font-family: 'Orbitron', monospace; background:#0b0c0f; color:#00ff99; text-align:center;}
+  h1 { margin:20px 0; text-shadow:0 0 10px #00ff99;}
+  #map { width: 100%; height: 80vh; border:3px solid #00ff99;}
+  #status { margin-top:10px; font-size:1.2rem; font-weight:bold;}
+  button { margin-top:10px; background:#11181f; border:3px solid #00ff99; border-radius:10px; color:#00ff99; font-weight:bold; font-size:1rem; padding:10px 20px; cursor:pointer;}
+  button:disabled { border-color:#555; color:#555; cursor:default;}
+</style>
 </head>
 <body>
-  <h1>Navicomputer / Astromech Socket</h1>
-  <p>
-    For hyperdrive calculations, a ship uses a specialized navigation computer. On many starfighters, this is
-    replaced by an astromech droid, which can plug into a dedicated socket and assist the pilot with calculations
-    and repairs.
-  </p>
+<h1>Navicomputer Challenge</h1>
+<div id="map"></div>
+<div id="status">Locate the correct planet on the map!</div>
+<button id="retryBtn" style="display:none;">Retry</button>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+const challengeIndex = 9; // Navicomputer
+
+// Landmarks in NC
+const locations = [
+  {lat:35.7890, lng:-78.7811, name:"Red Nebula"},      // Cary Downtown Park (correct)
+  {lat:35.7995, lng:-78.7848, name:"Blue Star"},       // Koka Booth Amphitheatre (decoy)
+  {lat:35.7806, lng:-78.6391, name:"Binary System"},   // Raleigh State Capitol (decoy)
+  {lat:35.7327, lng:-78.8500, name:"Gamma Cluster"},   // Apex Town Hall (decoy)
+  {lat:35.8792, lng:-78.7554, name:"Silver Moon"}      // Umstead Park Entrance (decoy)
+];
+const correctIndex = 0;
+let markers = [];
+let map;
+
+// Initialize map
+map = L.map('map').setView([35.78, -78.78], 12); // Centered on Cary/Raleigh/Apex
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+// Create markers
+locations.forEach((loc,i)=>{
+  const marker = L.marker([loc.lat, loc.lng]).addTo(map).bindPopup(loc.name);
+  marker.on('click', ()=>onMarkerClick(i));
+  markers.push(marker);
+});
+
+// Disable/Enable markers
+function disableMarkers(){ markers.forEach(m=>m.off('click')); }
+function enableMarkers(){ markers.forEach((m,i)=>m.on('click',()=>onMarkerClick(i))); }
+
+// Handle marker clicks
+function onMarkerClick(index){
+  if(index === correctIndex){
+    document.getElementById('status').textContent = 'Navigation Complete! ✅';
+    disableMarkers();
+    document.getElementById('retryBtn').style.display='none';
+    fetch(`${API_URL}?index=${challengeIndex}&status=ON`,{method:'POST'});
+  } else {
+    document.getElementById('status').textContent = 'Wrong location! Retry in 5 seconds.';
+    disableMarkers();
+    document.getElementById('retryBtn').style.display='none';
+    setTimeout(()=>{
+      document.getElementById('status').textContent='Locate the correct planet on the map!';
+      enableMarkers();
+      document.getElementById('retryBtn').style.display='inline-block';
+    },5000);
+  }
+}
+
+// Retry button
+document.getElementById('retryBtn').addEventListener('click',()=>{
+  document.getElementById('status').textContent='Locate the correct planet on the map!';
+  enableMarkers();
+  document.getElementById('retryBtn').style.display='none';
+});
+
+// Check if already completed
+async function checkCompleted(){
+  try{
+    const res = await fetch(API_URL);
+    const statuses = await res.json();
+    if(statuses[challengeIndex] === 'ON'){
+      document.getElementById('status').textContent='Already completed ✅';
+      disableMarkers();
+      document.getElementById('retryBtn').style.display='none';
+    }
+  } catch(e){ console.error(e); }
+}
+
+checkCompleted();
+</script>
 </body>
 </html>
