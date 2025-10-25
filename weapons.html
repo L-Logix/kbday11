@@ -27,6 +27,7 @@
   #threat {
     font-size: 1.5rem;
     margin: 20px;
+    min-height: 1.5em;
   }
 
   .weapons-container {
@@ -122,9 +123,10 @@ let wrongCount = 0;
 let timer = 10;
 let interval;
 let waiting = false;
+let weaponsActivated = false; // track if dashboard light has been activated
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
-const indexWeapons = 6; // dashboard index for weapons
+const indexWeapons = 6; // index for weapons light on dashboard
 
 const threatEl = document.getElementById('threat');
 const timerEl = document.getElementById('timer');
@@ -141,11 +143,15 @@ function loadThreat() {
   if(currentThreat >= threats.length){
     weaponsContainer.style.display = 'none';
     timerEl.textContent = "";
+    threatEl.textContent = ""; // clear last threat
     feedbackEl.textContent = `You neutralized ${correctCount} correct and ${wrongCount} wrong threats.`;
+
     if(correctCount === threats.length){
-      // Only turn on dashboard light if all correct
-      fetch(`${API_URL}?index=${indexWeapons}&status=ON`, { method: "POST" })
-        .catch(err => console.error('Failed to update sheet:', err));
+      if(!weaponsActivated){
+        weaponsActivated = true;
+        fetch(`${API_URL}?index=${indexWeapons}&status=ON`, { method: "POST" })
+          .catch(err => console.error('Failed to update sheet:', err));
+      }
     } else {
       retryBtn.style.display = 'block';
     }
@@ -200,7 +206,6 @@ function handleClick(e){
     feedbackEl.textContent = "Correct! Threat neutralized!";
     weapons.forEach(w => w.disabled = true);
 
-    // Update Google Sheet for weapons challenge (index=6) only if all correct at end
     correctCount++;
     setTimeout(()=>{
       currentThreat++;
