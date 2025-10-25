@@ -123,10 +123,10 @@ let wrongCount = 0;
 let timer = 10;
 let interval;
 let waiting = false;
-let weaponsActivated = false; // track if dashboard light has been activated
+let weaponsActivated = false; // track if dashboard light is already ON
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
-const indexWeapons = 6; // index for weapons light on dashboard
+const indexWeapons = 6;
 
 const threatEl = document.getElementById('threat');
 const timerEl = document.getElementById('timer');
@@ -139,11 +139,31 @@ const weapons = [
 ];
 const retryBtn = document.getElementById('retryBtn');
 
+async function checkWeaponsStatus() {
+  try {
+    const res = await fetch(API_URL);
+    const statuses = await res.json();
+    if(statuses[indexWeapons] === 'ON'){
+      weaponsActivated = true;
+      weaponsContainer.style.display = 'none';
+      retryBtn.style.display = 'none';
+      timerEl.textContent = "";
+      threatEl.textContent = "Weapons challenge already completed!";
+      feedbackEl.textContent = "";
+      return true;
+    }
+    return false;
+  } catch(e){
+    console.error("Failed to check weapons status:", e);
+    return false;
+  }
+}
+
 function loadThreat() {
   if(currentThreat >= threats.length){
     weaponsContainer.style.display = 'none';
     timerEl.textContent = "";
-    threatEl.textContent = ""; // clear last threat
+    threatEl.textContent = "";
     feedbackEl.textContent = `You neutralized ${correctCount} correct and ${wrongCount} wrong threats.`;
 
     if(correctCount === threats.length){
@@ -205,7 +225,6 @@ function handleClick(e){
     clearInterval(interval);
     feedbackEl.textContent = "Correct! Threat neutralized!";
     weapons.forEach(w => w.disabled = true);
-
     correctCount++;
     setTimeout(()=>{
       currentThreat++;
@@ -217,7 +236,6 @@ function handleClick(e){
     feedbackEl.textContent = "Wrong weapon! 5 second penalty.";
     weapons.forEach(w => w.disabled = true);
     waiting = true;
-
     wrongCount++;
     let penalty = 5;
     timerEl.textContent = `Penalty: ${penalty}s`;
@@ -245,7 +263,11 @@ retryBtn.addEventListener('click', ()=>{
   loadThreat();
 });
 
-loadThreat();
+checkWeaponsStatus().then(alreadyDone => {
+  if(!alreadyDone){
+    loadThreat();
+  }
+});
 </script>
 </body>
 </html>
