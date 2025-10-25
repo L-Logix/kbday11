@@ -72,6 +72,13 @@ const alignmentValueEl = document.getElementById('alignmentValue');
 const feedbackEl = document.getElementById('feedback');
 const captureBtn = document.getElementById('captureBtn');
 
+function disableControls() {
+  pullEl.disabled = true;
+  focusEl.disabled = true;
+  alignmentEl.disabled = true;
+  captureBtn.disabled = true;
+}
+
 // Update slider labels dynamically
 [pullEl, focusEl, alignmentEl].forEach(slider => {
   slider.addEventListener('input', () => {
@@ -88,11 +95,8 @@ async function checkTractorStatus() {
     if(statuses[indexTractor] === 'ON'){
       tractorActivated = true;
       containerNameEl.textContent = "Tractor Beam already activated!";
-      pullEl.style.display = 'none';
-      focusEl.style.display = 'none';
-      alignmentEl.style.display = 'none';
-      captureBtn.style.display = 'none';
       feedbackEl.textContent = "";
+      disableControls();
       return true;
     }
     return false;
@@ -105,12 +109,9 @@ async function checkTractorStatus() {
 function loadContainer() {
   if(current >= containers.length){
     // completed all
-    pullEl.style.display = 'none';
-    focusEl.style.display = 'none';
-    alignmentEl.style.display = 'none';
-    captureBtn.style.display = 'none';
     containerNameEl.textContent = "All containers captured!";
     feedbackEl.textContent = "Tractor Beam activated!";
+    disableControls();
     if(!tractorActivated){
       tractorActivated = true;
       fetch(`${API_URL}?index=${indexTractor}&status=ON`, {method:"POST"})
