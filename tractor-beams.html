@@ -26,21 +26,22 @@
   }
   button:hover { background: #00ff99; color: #0b0c0f; }
   #feedback { margin-top: 15px; min-height: 20px; }
+  .hidden { display: none; }
 </style>
 </head>
 <body>
 <h1>Tractor Beam Challenge</h1>
 <div id="containerName">Current Container: ---</div>
 
-<div class="slider-container">
+<div class="slider-container" id="pullContainer">
   <label for="pull">Pull Strength: <span id="pullValue" class="slider-value">1</span></label>
   <input type="range" id="pull" min="1" max="5" value="1">
 </div>
-<div class="slider-container">
+<div class="slider-container" id="focusContainer">
   <label for="focus">Beam Focus: <span id="focusValue" class="slider-value">1</span></label>
   <input type="range" id="focus" min="1" max="5" value="1">
 </div>
-<div class="slider-container">
+<div class="slider-container" id="alignmentContainer">
   <label for="alignment">Alignment: <span id="alignmentValue" class="slider-value">1</span></label>
   <input type="range" id="alignment" min="1" max="5" value="1">
 </div>
@@ -72,11 +73,19 @@ const alignmentValueEl = document.getElementById('alignmentValue');
 const feedbackEl = document.getElementById('feedback');
 const captureBtn = document.getElementById('captureBtn');
 
+const pullContainer = document.getElementById('pullContainer');
+const focusContainer = document.getElementById('focusContainer');
+const alignmentContainer = document.getElementById('alignmentContainer');
+
 function disableControls() {
   pullEl.disabled = true;
   focusEl.disabled = true;
   alignmentEl.disabled = true;
   captureBtn.disabled = true;
+  // hide sliders visually
+  pullContainer.classList.add('hidden');
+  focusContainer.classList.add('hidden');
+  alignmentContainer.classList.add('hidden');
 }
 
 // Update slider labels dynamically
