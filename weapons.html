@@ -98,9 +98,12 @@ const threats = [
 ];
 
 let currentThreat = 0;
+let correctCount = 0;
 let timer = 10;
 let interval;
 let waiting = false;
+
+const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
 
 const threatEl = document.getElementById('threat');
 const timerEl = document.getElementById('timer');
@@ -113,11 +116,15 @@ const weapons = [
 
 function loadThreat() {
   if(currentThreat >= threats.length){
-    threatEl.textContent = "All threats neutralized! Weapons ready!";
     weapons.forEach(w => w.disabled = true);
     timerEl.textContent = "";
     feedbackEl.textContent = "";
     clearInterval(interval);
+    if(correctCount === threats.length){
+      threatEl.textContent = "All threats neutralized! Weapons ready!";
+    } else {
+      threatEl.textContent = `Challenge complete. ${correctCount} of ${threats.length} threats neutralized.`;
+    }
     return;
   }
 
@@ -154,7 +161,7 @@ function countdown(){
         currentThreat++;
         loadThreat();
       }
-    }, 1000);
+    },1000);
   }
 }
 
@@ -166,6 +173,12 @@ function handleClick(e){
     clearInterval(interval);
     feedbackEl.textContent = "Correct! Threat neutralized!";
     weapons.forEach(w => w.disabled = true);
+
+    // Update Google Sheet for weapons challenge (index=6)
+    fetch(`${API_URL}?index=6&status=ON`, { method: "POST" })
+      .catch(err => console.error('Failed to update sheet:', err));
+
+    correctCount++;
     setTimeout(()=>{
       currentThreat++;
       loadThreat();
@@ -185,8 +198,8 @@ function handleClick(e){
       if(penalty <= 0){
         clearInterval(penaltyInterval);
         waiting = false;
-        currentThreat++; // increment threat here!
-        loadThreat();    // now loads next threat correctly
+        currentThreat++;
+        loadThreat();
       }
     }, 1000);
   }
