@@ -52,35 +52,33 @@
     }
 
     a.button {
-  width: 100px;
-  height: 100px;
-  background: #11181f;
-  border-radius: 25px;
-  border: 3px solid #00ff99;
-  box-shadow:
-    inset 0 0 20px #007f44,
-    0 0 20px #00ff99;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: 900;
-  font-size: 0.7rem;
-  color: #00ff99;
-  letter-spacing: 0.05em;
-  text-shadow:
-    0 0 8px #00ff99;
-  position: relative;
-  text-decoration: none;
-  cursor: pointer;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-  user-select: none;
-  padding: 8px;
-  text-align: center;
-  line-height: 1.2;
-  flex-wrap: wrap;
-  white-space: normal; /* allow wrapping */
-}
-
+      width: 100px;
+      height: 100px;
+      background: #11181f;
+      border-radius: 25px;
+      border: 3px solid #00ff99;
+      box-shadow:
+        inset 0 0 20px #007f44,
+        0 0 20px #00ff99;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 900;
+      font-size: 0.7rem;
+      color: #00ff99;
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 8px #00ff99;
+      position: relative;
+      text-decoration: none;
+      cursor: pointer;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+      user-select: none;
+      padding: 8px;
+      text-align: center;
+      line-height: 1.2;
+      flex-wrap: wrap;
+      white-space: normal;
+    }
 
     a.button.off {
       border-color: #ff3b3b;
@@ -169,54 +167,51 @@
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
     const dashboard = document.getElementById('dashboard');
-
-    // Status page URL (change this to your actual GitHub Pages status page)
     const STATUS_PAGE_URL = 'https://l-logix.github.io/kbday11/mission-status.html';
 
-    // Array of URLs for buttons 1-11, customize these links!
-const buttonLinks = [
-  'sublight-engines.html',
-  'hyperdrive.html',
-  'hyperdrive-motivator.html',
-  'power-reactor.html',
-  'deflector-shields.html',
-  'hull.html',
-  'weapons.html',
-  'tractor-beams.html',
-  'bridge.html',
-  'navicomputer.html',
-  'life-support.html'
-];
+    // Array of system names and links (added Mission Notes)
+    const systemNames = [
+      'Sublight Engines',
+      'Hyperdrive',
+      'Hyperdrive Motivator',
+      'Power Reactor',
+      'Deflector Shields',
+      'Hull',
+      'Weapons',
+      'Tractor Beams',
+      'Bridge/Cockpit',
+      'Navicomputer',
+      'Life Support',
+      'Mission Notes'       // NEW
+    ];
 
+    const buttonLinks = [
+      'sublight-engines.html',
+      'hyperdrive.html',
+      'hyperdrive-motivator.html',
+      'power-reactor.html',
+      'deflector-shields.html',
+      'hull.html',
+      'weapons.html',
+      'tractor-beams.html',
+      'bridge.html',
+      'navicomputer.html',
+      'life-support.html',
+      'notes.html'          // NEW
+    ];
 
     function createButtons() {
       const containers = [];
 
-      // Create buttons 1 to 11 in circle
-      for (let i = 0; i < 11; i++) {
+      // Create 12 buttons in circle
+      for (let i = 0; i < systemNames.length; i++) {
         const container = document.createElement('div');
         container.className = 'button-container';
 
         const button = document.createElement('a');
         button.className = 'button';
-        const systemNames = [
-  'Sublight Engines',
-  'Hyperdrive',
-  'Hyperdrive Motivator',
-  'Power Reactor',
-  'Deflector Shields',
-  'Hull',
-  'Weapons',
-  'Tractor Beams',
-  'Bridge/Cockpit',
-  'Navicomputer',
-  'Life Support'
-];
-
-button.textContent = systemNames[i];
-
+        button.textContent = systemNames[i];
         button.href = buttonLinks[i];
-       // button.target = '_blank'; // open in new tab, optional
         button.rel = 'noopener noreferrer';
 
         const light = document.createElement('div');
@@ -230,53 +225,41 @@ button.textContent = systemNames[i];
         containers.push(container);
       }
 
-      // Create main status button (button 12)
+      // Create main status button (center)
       const mainContainer = document.createElement('div');
       mainContainer.className = 'main-button-container';
-
       const mainButton = document.createElement('a');
       mainButton.className = 'button main-button';
       mainButton.textContent = 'STATUS';
       mainButton.href = STATUS_PAGE_URL;
-    //  mainButton.target = '_blank'; // optional
       mainButton.rel = 'noopener noreferrer';
-
       mainContainer.appendChild(mainButton);
-
       dashboard.appendChild(mainContainer);
-
       containers.push(mainContainer);
 
       return containers;
     }
 
-    // Positions 11 buttons evenly around center button
     function positionButtons(buttonContainers, centerX, centerY, radius) {
-      // First 11 buttons (0-10) around circle
-      for (let i = 0; i < 11; i++) {
+      // First 12 buttons around circle
+      for (let i = 0; i < 12; i++) {
         const container = buttonContainers[i];
-        // Calculate angle for even spacing
-        const angle = (i / 11) * (2 * Math.PI) - Math.PI / 2; // start from top
-
+        const angle = (i / 12) * (2 * Math.PI) - Math.PI / 2; // start top
         const x = centerX + radius * Math.cos(angle);
         const y = centerY + radius * Math.sin(angle);
-
         container.style.left = `${x}px`;
         container.style.top = `${y}px`;
         container.style.transform = 'translate(-50%, -50%)';
       }
-
-      // Main button (index 11) center (already positioned absolute with CSS)
+      // Main button (index 12) center stays absolute
     }
 
-    // Update button lights based on API data
     async function updateButtons() {
       try {
         const res = await fetch(API_URL);
         const statuses = await res.json();
 
-        // Update buttons 1 to 11
-        for(let i = 0; i < 11; i++) {
+        for (let i = 0; i < 12; i++) {
           const container = dashboard.children[i];
           const button = container.querySelector('a.button');
           const light = container.querySelector('.light');
@@ -290,34 +273,24 @@ button.textContent = systemNames[i];
           }
         }
 
-        // Update main button glow based on overall status
         const allOn = statuses.every(s => s === 'ON');
         const mainButtonContainer = dashboard.querySelector('.main-button-container');
         const mainButton = mainButtonContainer.querySelector('a.main-button');
-        if (allOn) {
-          mainButton.classList.remove('off');
-        } else {
-          mainButton.classList.add('off');
-        }
+        if (allOn) mainButton.classList.remove('off');
+        else mainButton.classList.add('off');
 
       } catch (e) {
         console.error('Failed to update button status:', e);
       }
     }
 
-    // Initialize
     const buttons = createButtons();
-
-    const centerX = 325; // half of dashboard width 650px
-    const centerY = 325; // half of dashboard height
+    const centerX = 325;
+    const centerY = 325;
     const radius = 250;
-
     positionButtons(buttons, centerX, centerY, radius);
-
     updateButtons();
     setInterval(updateButtons, 3000);
-
-    // Reposition on resize (optional)
     window.addEventListener('resize', () => {
       positionButtons(buttons, centerX, centerY, radius);
     });
