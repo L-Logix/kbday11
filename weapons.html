@@ -140,14 +140,21 @@ function countdown(){
     timerEl.textContent = "Time Left: " + timer + "s";
   } else {
     clearInterval(interval);
-    feedbackEl.textContent = "Too slow! 5 second delay before next threat.";
+    feedbackEl.textContent = "Too slow! 5 second penalty.";
     weapons.forEach(w => w.disabled = true);
     waiting = true;
-    setTimeout(()=>{
-      waiting=false;
-      currentThreat++;
-      loadThreat();
-    },5000);
+    let penalty = 5;
+    timerEl.textContent = `Penalty: ${penalty}s`;
+    const penaltyInterval = setInterval(()=>{
+      penalty--;
+      timerEl.textContent = `Penalty: ${penalty}s`;
+      if(penalty <= 0){
+        clearInterval(penaltyInterval);
+        waiting = false;
+        currentThreat++;
+        loadThreat();
+      }
+    }, 1000);
   }
 }
 
@@ -166,13 +173,21 @@ function handleClick(e){
   } else {
     e.target.classList.add('wrong');
     clearInterval(interval);
-    feedbackEl.textContent = "Wrong weapon! 5 second penalty.";
+    feedbackEl.textContent = "Wrong weapon! Wait 5 seconds.";
     weapons.forEach(w => w.disabled = true);
     waiting = true;
-    setTimeout(()=>{
-      waiting=false;
-      loadThreat();
-    },5000);
+
+    let penalty = 5;
+    timerEl.textContent = `Penalty: ${penalty}s`;
+    const penaltyInterval = setInterval(()=>{
+      penalty--;
+      timerEl.textContent = `Penalty: ${penalty}s`;
+      if(penalty <= 0){
+        clearInterval(penaltyInterval);
+        waiting = false;
+        loadThreat();
+      }
+    }, 1000);
   }
 }
 
