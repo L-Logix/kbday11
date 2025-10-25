@@ -1,19 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Tractor Beams</title>
-  <style>
-    body { background-color: #0b0c0f; color: #00ff99; font-family: 'Orbitron', sans-serif; padding: 40px; }
-    h1 { font-size: 2em; text-shadow: 0 0 10px #00ff99; }
-    p { font-size: 1.2em; line-height: 1.6; max-width: 800px; }
-  </style>
+<meta charset="UTF-8">
+<title>Tractor Beam Challenge</title>
+<style>
+  body {
+    background: #0b0c0f;
+    color: #00ff99;
+    font-family: 'Orbitron', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+  }
+  h1 { margin-bottom: 20px; text-shadow: 0 0 10px #00ff99; }
+  .slider-container { margin: 15px 0; }
+  .slider-container label { display: block; margin-bottom: 5px; }
+  input[type=range] { width: 300px; }
+  button { 
+    background: #11181f; color: #00ff99; border: 3px solid #00ff99; border-radius: 15px; 
+    padding: 10px 20px; font-weight: bold; cursor: pointer; margin-top: 15px; 
+  }
+  button:hover { background: #00ff99; color: #0b0c0f; }
+  #feedback { margin-top: 15px; min-height: 20px; }
+</style>
 </head>
 <body>
-  <h1>Tractor Beams</h1>
-  <p>
-    These emitters project a powerful force field used to grab and hold other vessels. They can be used for boarding,
-    to prevent a ship from fleeing, or for docking operations.
-  </p>
+<h1>Tractor Beam Challenge</h1>
+<div id="containerName">Current Container: ---</div>
+
+<div class="slider-container">
+  <label for="pull">Pull Strength</label>
+  <input type="range" id="pull" min="1" max="5" value="1">
+</div>
+<div class="slider-container">
+  <label for="focus">Beam Focus</label>
+  <input type="range" id="focus" min="1" max="5" value="1">
+</div>
+<div class="slider-container">
+  <label for="alignment">Alignment</label>
+  <input type="range" id="alignment" min="1" max="5" value="1">
+</div>
+
+<button id="captureBtn">Capture</button>
+<div id="feedback"></div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+const indexTractor = 7; // dashboard index for Tractor Beam
+let tractorActivated = false;
+
+const containers = [
+  {name:"Alpha", pull:3, focus:4, alignment:2},
+  {name:"Beta", pull:1, focus:2, alignment:1},
+  {name:"Gamma", pull:5, focus:3, alignment:5}
+];
+
+let current = 0;
+let waiting = false;
+
+const containerNameEl = document.getElementById('containerName');
+const pullEl = document.getElementById('pull');
+const focusEl = document.getElementById('focus');
+const alignmentEl = document.getElementById('alignment');
+const feedbackEl = document.getElementById('feedback');
+const captureBtn = document.getElementById('captureBtn');
+
+async function checkTractorStatus() {
+  try {
+    const res = await fetch(API_URL);
+    const statuses = await res.json();
+    if(statuses[indexTractor] === 'ON'){
+      tractorActivated = true;
+      containerNameEl.textContent = "Tractor Beam already activated!";
+      pullEl.style.display = 'none';
+      focusEl.style.display = 'none';
+      alignmentEl.style.display = 'none';
+      captureBtn.style.display = 'none';
+      feedbackEl.textContent = "";
+      return true;
+    }
+    return false;
+  } catch(e){
+    console.error("Failed to check tractor status:", e);
+    return false;
+  }
+}
+
+function loadContainer() {
+  if(current >= containers.length){
+    // completed all
+    pullEl.style.display = 'none';
+    focusEl.style.display = 'none';
+    alignmentEl.style.display = 'none';
+    captureBtn.style.display = 'none';
+    containerNameEl.textContent = "All containers captured!";
+    feedbackEl.textContent = "Tractor Beam activated!";
+    if(!tractorActivated){
+      tractorActivated = true;
+      fetch(`${API_URL}?index=${indexTractor}&status=ON`, {method:"POST"})
+        .catch(err => console.error('Failed to update sheet:', err));
+    }
+    return;
+  }
+  const c = containers[current];
+  containerNameEl.textContent = "Current Container: " + c.name;
+  pullEl.value = 1;
+  focusEl.value = 1;
+  alignmentEl.value = 1;
+  feedbackEl.textContent = "";
+}
+
+function applyPenalty(nextFn){
+  waiting = true;
+  let penalty = 5;
+  feedbackEl.textContent = `Incorrect! Wait ${penalty}s before retry.`;
+  const interval = setInterval(()=>{
+    penalty--;
+    feedbackEl.textContent = `Incorrect! Wait ${penalty}s before retry.`;
+    if(penalty <= 0){
+      clearInterval(interval);
+      waiting = false;
+      nextFn();
+    }
+  },1000);
+}
+
+captureBtn.addEventListener('click',()=>{
+  if(waiting || tractorActivated) return;
+  const c = containers[current];
+  const pull = parseInt(pullEl.value);
+  const focus = parseInt(focusEl.value);
+  const align = parseInt(alignmentEl.value);
+
+  if(pull === c.pull && focus === c.focus && align === c.alignment){
+    feedbackEl.textContent = "Container captured successfully!";
+    current++;
+    setTimeout(loadContainer, 1000);
+  } else {
+    applyPenalty(()=>{ loadContainer(); });
+  }
+});
+
+// Initialize
+checkTractorStatus().then(alreadyDone=>{
+  if(!alreadyDone) loadContainer();
+});
+</script>
 </body>
 </html>
