@@ -58,7 +58,7 @@ button:disabled { border-color: #555; color: #555; }
 const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
 const challengeIndex = 8; // Bridge/Cockpit
 
-// Check if already ON
+// Check if already completed
 async function checkCompleted() {
   try {
     const res = await fetch(API_URL);
@@ -76,20 +76,21 @@ async function checkCompleted() {
 // Canvas setup
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const gridCols = 5;
+const gridCols = 7;
 const cellWidth = canvas.width / gridCols;
 const shipHeight = 30;
 const shipWidth = 40;
 
-let shipCol = 2;
+let shipCol = 3;
 let shipRow = canvas.height - shipHeight;
 let asteroids = [];
 let gameInterval, asteroidInterval, timerInterval;
 let timeLeft = 45;
 let isPlaying = true;
-let penalty = false;
+let boostAvailable = 3;
+let boostCooldown = false;
 
-// Draw ship and asteroids
+// Draw everything
 function draw() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
   // Ship
@@ -118,6 +119,7 @@ function update() {
 
   if(hit){
     isPlaying = false;
+    boostAvailable = Math.max(boostAvailable-1,0);
     document.getElementById('status').textContent = 'Hit! 5-second penalty';
     disableControls();
     setTimeout(()=>{
@@ -141,13 +143,13 @@ function update() {
 
 // Reset ship
 function resetShip(){
-  shipCol = 2;
+  shipCol = 3;
   shipRow = canvas.height - shipHeight;
 }
 
 // Timer
 timerInterval = setInterval(()=>{
-  if(isPlaying && !penalty){
+  if(isPlaying){
     timeLeft--;
     document.getElementById('timer').textContent = 'Time: '+timeLeft;
     if(timeLeft<=0){
@@ -174,13 +176,20 @@ function enableControls(){ leftBtn.disabled = rightBtn.disabled = boostBtn.disab
 
 leftBtn.addEventListener('click',()=>{ if(shipCol>0) shipCol--; });
 rightBtn.addEventListener('click',()=>{ if(shipCol<gridCols-1) shipCol++; });
-boostBtn.addEventListener('click',()=>{ shipRow -= 50; if(shipRow<0) shipRow=0; });
+boostBtn.addEventListener('click',()=>{
+  if(boostAvailable>0 && !boostCooldown){
+    shipRow -= 30; // Boost moves 1 row
+    boostAvailable--;
+    boostCooldown = true;
+    setTimeout(()=>{ boostCooldown=false; }, 1000); // 1s cooldown
+  }
+});
 
 // Game loop
 gameInterval = setInterval(update,30);
-asteroidInterval = setInterval(createAsteroid,800);
+asteroidInterval = setInterval(createAsteroid, 700+Math.random()*500);
 
-// Check completion on load
+// Initial check
 checkCompleted();
 </script>
 </body>
