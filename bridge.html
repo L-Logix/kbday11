@@ -1,19 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Bridge / Cockpit</title>
-  <style>
-    body { background-color: #0b0c0f; color: #00ff99; font-family: 'Orbitron', sans-serif; padding: 40px; }
-    h1 { font-size: 2em; text-shadow: 0 0 10px #00ff99; }
-    p { font-size: 1.2em; line-height: 1.6; max-width: 800px; }
-  </style>
+<meta charset="UTF-8">
+<title>Bridge/Cockpit Navigation</title>
+<style>
+  body {
+    background: #0b0c0f;
+    color: #00ff99;
+    font-family: 'Orbitron', monospace;
+    text-align: center;
+    margin: 0;
+    overflow: hidden;
+  }
+  h1 {
+    margin: 20px 0;
+    text-shadow: 0 0 10px #00ff99;
+  }
+  canvas {
+    background: #11181f;
+    border: 3px solid #00ff99;
+    display: block;
+    margin: 0 auto;
+  }
+  #status {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  #timer {
+    margin-top: 10px;
+    font-size: 1rem;
+  }
+</style>
 </head>
 <body>
-  <h1>Bridge / Cockpit</h1>
-  <p>
-    The bridge is the command center of larger starships, like a Star Destroyer, housing navigation and communication
-    systems. On smaller ships like the X-wing or Millennium Falcon, this role is fulfilled by the cockpit.
-  </p>
+<h1>Bridge/Cockpit Navigation</h1>
+<canvas id="gameCanvas" width="500" height="600"></canvas>
+<div id="status">Use ← → to move, ↑ for Boost</div>
+<div id="timer">Time: 45</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const gridCols = 5;
+const cellWidth = canvas.width / gridCols;
+const shipHeight = 30;
+const shipWidth = 40;
+
+let shipCol = 2; // starts center
+let shipRow = canvas.height - shipHeight;
+let asteroids = [];
+let gameInterval;
+let asteroidInterval;
+let timeLeft = 45;
+let timerInterval;
+let isPlaying = true;
+let penalty = false;
+
+// Create asteroids
+function createAsteroid() {
+  const col = Math.floor(Math.random() * gridCols);
+  asteroids.push({ col, y: -30, speed: Math.random()*2 + 1 });
+}
+
+// Draw everything
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw ship
+  ctx.fillStyle = '#00ff99';
+  ctx.fillRect(shipCol*cellWidth + cellWidth/2 - shipWidth/2, shipRow, shipWidth, shipHeight);
+
+  // Draw asteroids
+  ctx.fillStyle = '#ff3b3b';
+  asteroids.forEach(a => {
+    ctx.beginPath();
+    ctx.arc(a.col*cellWidth + cellWidth/2, a.y + 15, 15, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+
+// Update positions
+function update() {
+  if (!isPlaying) return;
+
+  let hit = false;
+  asteroids.forEach(a => {
+    a.y += a.speed;
+    // Check collision
+    const asteroidTop = a.y;
+    const asteroidBottom = a.y + 30;
+    const shipTop = shipRow;
+    const shipBottom = shipRow + shipHeight;
+    const shipLeft = shipCol*cellWidth + cellWidth/2 - shipWidth/2;
+    const shipRight = shipLeft + shipWidth;
+    const asteroidLeft = a.col*cellWidth;
+    const asteroidRight = asteroidLeft + cellWidth;
+
+    if (asteroidBottom > shipTop && asteroidTop < shipBottom && asteroidRight > shipLeft && asteroidLeft < shipRight) {
+      hit = true;
+    }
+  });
+
+  if (hit) {
+    isPlaying = false;
+    document.getElementById('status').textContent = 'Hit! 5 second penalty';
+    setTimeout(() => {
+      resetShip();
+      isPlaying = true;
+      document.getElementById('status').textContent = 'Use ← → to move, ↑ for Boost';
+    }, 5000);
+  }
+
+  // Check victory
+  if (shipRow <= 0) {
+    isPlaying = false;
+    document.getElementById('status').textContent = 'Navigation Complete! ✅';
+    // Update Google Sheet
+    fetch(`${API_URL}?index=8&status=ON`, { method: 'POST' });
+    clearInterval(timerInterval);
+  }
+
+  draw();
+}
+
+// Reset ship
+function resetShip() {
+  shipCol = 2;
+  shipRow = canvas.height - shipHeight;
+}
+
+// Timer
+timerInterval = setInterval(() => {
+  if (isPlaying && !penalty) {
+    timeLeft--;
+    document.getElementById('timer').textContent = 'Time: ' + timeLeft;
+    if (timeLeft <= 0) {
+      isPlaying = false;
+      document.getElementById('status').textContent = 'Time up! Restart challenge.';
+    }
+  }
+}, 1000);
+
+// Controls
+document.addEventListener('keydown', e => {
+  if (!isPlaying) return;
+  if (e.key === 'ArrowLeft' && shipCol > 0) shipCol--;
+  if (e.key === 'ArrowRight' && shipCol < gridCols-1) shipCol++;
+  if (e.key === 'ArrowUp') shipRow -= 50; // Boost
+});
+
+// Game loop
+gameInterval = setInterval(update, 30);
+asteroidInterval = setInterval(createAsteroid, 1000);
+</script>
 </body>
 </html>
