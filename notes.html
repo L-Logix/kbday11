@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission Notes</title>
+<style>
+  body {
+    background: #000;
+    color: #0f0;
+    font-family: "Share Tech Mono", monospace;
+    text-align: center;
+    padding: 20px;
+  }
+  h1 {
+    color: #00ff88;
+    margin-bottom: 15px;
+  }
+  textarea {
+    width: 90%;
+    max-width: 800px;
+    height: 300px;
+    background:#010;
+    color:#0f0;
+    border:1px solid #0f0;
+    border-radius:8px;
+    padding:10px;
+    font-size:16px;
+    resize:none;
+  }
+  button {
+    background:#111;
+    color:#0f0;
+    border:1px solid #0f0;
+    padding:8px 14px;
+    border-radius:5px;
+    margin:5px;
+    cursor:pointer;
+    font-weight:bold;
+  }
+  button:hover {
+    background:#0f0;
+    color:#000;
+  }
+  #feedback {
+    margin-top:15px;
+    color:#66ffb3;
+  }
+</style>
+</head>
+<body>
+
+<h1>Mission Notes</h1>
+<textarea id="notes" placeholder="Type your mission notes here..."></textarea>
+<br>
+<button onclick="downloadNotes()">💾 Download Notes as TXT</button>
+<div id="feedback"></div>
+
+<script>
+const notesBox = document.getElementById('notes');
+const feedback = document.getElementById('feedback');
+
+function downloadNotes() {
+  const text = notesBox.value;
+  if(!text) {
+    feedback.textContent = "Nothing to save!";
+    return;
+  }
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'mission_notes.txt';
+  link.click();
+  URL.revokeObjectURL(url);
+  feedback.textContent = "Notes downloaded as mission_notes.txt!";
+}
+</script>
+
+</body>
+</html>
