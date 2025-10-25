@@ -1,19 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Weapons</title>
-  <style>
-    body { background-color: #0b0c0f; color: #00ff99; font-family: 'Orbitron', sans-serif; padding: 40px; }
-    h1 { font-size: 2em; text-shadow: 0 0 10px #00ff99; }
-    p { font-size: 1.2em; line-height: 1.6; max-width: 800px; }
-  </style>
+<meta charset="UTF-8">
+<title>Weapons Challenge - Rapid Fire</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
+  body {
+    background: #0b0c0f;
+    color: #00ff99;
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99;
+  }
+
+  #threat {
+    font-size: 1.5rem;
+    margin: 20px;
+  }
+
+  .weapons-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  button.weapon {
+    background: #11181f;
+    color: #00ff99;
+    border: 3px solid #00ff99;
+    border-radius: 15px;
+    padding: 15px 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  button.weapon:hover {
+    background: #00ff99;
+    color: #0b0c0f;
+  }
+
+  button.correct {
+    background: #0f0;
+    color: #000;
+  }
+
+  button.wrong {
+    background: #f00;
+    color: #000;
+  }
+
+  #timer {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+  }
+
+  #feedback {
+    font-size: 1rem;
+    margin-top: 10px;
+    min-height: 20px;
+  }
+</style>
 </head>
 <body>
-  <h1>Weapons</h1>
-  <p>
-    Starships are equipped with various offensive armaments. This includes rapid-firing blaster or laser cannons,
-    powerful turbolasers for capital ships, and long-range proton torpedoes or concussion missiles.
-  </p>
+
+<h1>Weapons Challenge</h1>
+<div id="timer">Time Left: 10s</div>
+<div id="threat">Incoming Threat: ---</div>
+<div class="weapons-container">
+  <button class="weapon" id="weapon1"></button>
+  <button class="weapon" id="weapon2"></button>
+  <button class="weapon" id="weapon3"></button>
+</div>
+<div id="feedback"></div>
+
+<script>
+const threats = [
+  {name:"Scout Drone", correct:"Laser", options:["Laser","Missile","EMP"]},
+  {name:"Enemy Fighter", correct:"Missile", options:["Laser","Missile","EMP"]},
+  {name:"Stealth Ship", correct:"EMP", options:["Laser","Missile","EMP"]},
+  {name:"Assault Frigate", correct:"Missile", options:["Laser","Missile","EMP"]},
+  {name:"Kamikaze Drone", correct:"Laser", options:["Laser","Missile","EMP"]}
+];
+
+let currentThreat = 0;
+let timer = 10;
+let interval;
+let waiting = false;
+
+const threatEl = document.getElementById('threat');
+const timerEl = document.getElementById('timer');
+const feedbackEl = document.getElementById('feedback');
+const weapons = [
+  document.getElementById('weapon1'),
+  document.getElementById('weapon2'),
+  document.getElementById('weapon3')
+];
+
+function loadThreat() {
+  if(currentThreat >= threats.length){
+    threatEl.textContent = "All threats neutralized! Weapons ready!";
+    weapons.forEach(w => w.disabled = true);
+    timerEl.textContent = "";
+    feedbackEl.textContent = "";
+    clearInterval(interval);
+    return;
+  }
+
+  const t = threats[currentThreat];
+  threatEl.textContent = "Incoming Threat: " + t.name;
+  for(let i=0; i<3; i++){
+    weapons[i].textContent = t.options[i];
+    weapons[i].className = "weapon";
+    weapons[i].disabled = false;
+  }
+  feedbackEl.textContent = "";
+  timer = 10;
+  timerEl.textContent = "Time Left: " + timer + "s";
+  interval = setInterval(countdown,1000);
+}
+
+function countdown(){
+  if(timer > 0){
+    timer--;
+    timerEl.textContent = "Time Left: " + timer + "s";
+  } else {
+    clearInterval(interval);
+    feedbackEl.textContent = "Too slow! 5 second delay before next threat.";
+    weapons.forEach(w => w.disabled = true);
+    waiting = true;
+    setTimeout(()=>{
+      waiting=false;
+      currentThreat++;
+      loadThreat();
+    },5000);
+  }
+}
+
+function handleClick(e){
+  if(waiting) return;
+  const t = threats[currentThreat];
+  if(e.target.textContent === t.correct){
+    e.target.classList.add('correct');
+    clearInterval(interval);
+    feedbackEl.textContent = "Correct! Threat neutralized!";
+    weapons.forEach(w => w.disabled = true);
+    setTimeout(()=>{
+      currentThreat++;
+      loadThreat();
+    },1500);
+  } else {
+    e.target.classList.add('wrong');
+    clearInterval(interval);
+    feedbackEl.textContent = "Wrong weapon! 5 second penalty.";
+    weapons.forEach(w => w.disabled = true);
+    waiting = true;
+    setTimeout(()=>{
+      waiting=false;
+      loadThreat();
+    },5000);
+  }
+}
+
+weapons.forEach(w => w.addEventListener('click', handleClick));
+
+loadThreat();
+</script>
 </body>
 </html>
