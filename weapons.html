@@ -74,6 +74,24 @@
     margin-top: 10px;
     min-height: 20px;
   }
+
+  #retryBtn {
+    background: #11181f;
+    color: #00ff99;
+    border: 3px solid #00ff99;
+    border-radius: 15px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    display: none;
+    margin-top: 20px;
+  }
+
+  #retryBtn:hover {
+    background: #00ff99;
+    color: #0b0c0f;
+  }
 </style>
 </head>
 <body>
@@ -81,12 +99,13 @@
 <h1>Weapons Challenge</h1>
 <div id="timer">Time Left: 10s</div>
 <div id="threat">Incoming Threat: ---</div>
-<div class="weapons-container">
+<div class="weapons-container" id="weaponsContainer">
   <button class="weapon" id="weapon1"></button>
   <button class="weapon" id="weapon2"></button>
   <button class="weapon" id="weapon3"></button>
 </div>
 <div id="feedback"></div>
+<button id="retryBtn">Retry Challenge</button>
 
 <script>
 const threats = [
@@ -99,32 +118,38 @@ const threats = [
 
 let currentThreat = 0;
 let correctCount = 0;
+let wrongCount = 0;
 let timer = 10;
 let interval;
 let waiting = false;
 
 const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+const indexWeapons = 6; // dashboard index for weapons
 
 const threatEl = document.getElementById('threat');
 const timerEl = document.getElementById('timer');
 const feedbackEl = document.getElementById('feedback');
+const weaponsContainer = document.getElementById('weaponsContainer');
 const weapons = [
   document.getElementById('weapon1'),
   document.getElementById('weapon2'),
   document.getElementById('weapon3')
 ];
+const retryBtn = document.getElementById('retryBtn');
 
 function loadThreat() {
   if(currentThreat >= threats.length){
-    weapons.forEach(w => w.disabled = true);
+    weaponsContainer.style.display = 'none';
     timerEl.textContent = "";
-    feedbackEl.textContent = "";
-    clearInterval(interval);
+    feedbackEl.textContent = `You neutralized ${correctCount} correct and ${wrongCount} wrong threats.`;
     if(correctCount === threats.length){
-      threatEl.textContent = "All threats neutralized! Weapons ready!";
+      // Only turn on dashboard light if all correct
+      fetch(`${API_URL}?index=${indexWeapons}&status=ON`, { method: "POST" })
+        .catch(err => console.error('Failed to update sheet:', err));
     } else {
-      threatEl.textContent = `Challenge complete. ${correctCount} of ${threats.length} threats neutralized.`;
+      retryBtn.style.display = 'block';
     }
+    clearInterval(interval);
     return;
   }
 
@@ -147,6 +172,7 @@ function countdown(){
     timerEl.textContent = "Time Left: " + timer + "s";
   } else {
     clearInterval(interval);
+    wrongCount++;
     feedbackEl.textContent = "Too slow! 5 second penalty.";
     weapons.forEach(w => w.disabled = true);
     waiting = true;
@@ -174,10 +200,7 @@ function handleClick(e){
     feedbackEl.textContent = "Correct! Threat neutralized!";
     weapons.forEach(w => w.disabled = true);
 
-    // Update Google Sheet for weapons challenge (index=6)
-    fetch(`${API_URL}?index=6&status=ON`, { method: "POST" })
-      .catch(err => console.error('Failed to update sheet:', err));
-
+    // Update Google Sheet for weapons challenge (index=6) only if all correct at end
     correctCount++;
     setTimeout(()=>{
       currentThreat++;
@@ -186,10 +209,11 @@ function handleClick(e){
   } else {
     e.target.classList.add('wrong');
     clearInterval(interval);
-    feedbackEl.textContent = "Wrong weapon! Wait 5 seconds.";
+    feedbackEl.textContent = "Wrong weapon! 5 second penalty.";
     weapons.forEach(w => w.disabled = true);
     waiting = true;
 
+    wrongCount++;
     let penalty = 5;
     timerEl.textContent = `Penalty: ${penalty}s`;
     const penaltyInterval = setInterval(()=>{
@@ -201,11 +225,20 @@ function handleClick(e){
         currentThreat++;
         loadThreat();
       }
-    }, 1000);
+    },1000);
   }
 }
 
 weapons.forEach(w => w.addEventListener('click', handleClick));
+
+retryBtn.addEventListener('click', ()=>{
+  retryBtn.style.display = 'none';
+  weaponsContainer.style.display = 'flex';
+  currentThreat = 0;
+  correctCount = 0;
+  wrongCount = 0;
+  loadThreat();
+});
 
 loadThreat();
 </script>
