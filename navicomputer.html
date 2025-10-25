@@ -24,27 +24,47 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
 const challengeIndex = 9; // Navicomputer
 
-// Landmarks in NC
+// All 25 planets with exact coordinates
 const locations = [
-  {lat:35.7890, lng:-78.7811, name:"Red Nebula"},      // Cary Downtown Park (correct)
-  {lat:35.7995, lng:-78.7848, name:"Blue Star"},       // Koka Booth Amphitheatre (decoy)
-  {lat:35.7806, lng:-78.6391, name:"Binary System"},   // Raleigh State Capitol (decoy)
-  {lat:35.7327, lng:-78.8500, name:"Gamma Cluster"},   // Apex Town Hall (decoy)
-  {lat:35.8792, lng:-78.7554, name:"Silver Moon"}      // Umstead Park Entrance (decoy)
+  {lat:35.7915, lng:-78.7811, name:"Red Nebula", correct:true, hint:"The heart of Cary, where paths meet, green grounds and benches greet."},
+  {lat:35.7862, lng:-78.7810, name:"Blue Star", correct:false, hint:"Music drifts by the river’s edge, but not where stars align."},
+  {lat:35.7804, lng:-78.6391, name:"Binary System", correct:false, hint:"A house of laws, standing tall, echoes fill the hall."},
+  {lat:35.7326, lng:-78.8500, name:"Gamma Cluster", correct:false, hint:"Civic hub under the roofed lair, but not your target star."},
+  {lat:35.8905, lng:-78.7502, name:"Silver Moon", correct:false, hint:"Trails and trees, a park to roam, but not the mission’s home."},
+  {lat:35.7862, lng:-78.7810, name:"Bronze Comet", correct:false, hint:"Creatures and fossils, knowledge abound, but stars are elsewhere found."},
+  {lat:35.8033, lng:-78.7225, name:"Golden Sun", correct:false, hint:"Where the crowd cheers loud and bright, but your coordinates lie not here tonight."},
+  {lat:35.8402, lng:-78.6522, name:"Crimson Dwarf", correct:false, hint:"Shopping and lights, but not your flight."},
+  {lat:35.8905, lng:-78.7502, name:"Indigo Nebula", correct:false, hint:"A winding path, but not your path today."},
+  {lat:35.7796, lng:-78.6382, name:"Emerald Planet", correct:false, hint:"Vendors and stalls, yet no celestial calls."},
+  {lat:35.8366, lng:-78.7970, name:"Sapphire Star", correct:false, hint:"Water glimmers, but this star’s not on your radar."},
+  {lat:35.7321, lng:-78.8501, name:"Topaz Cluster", correct:false, hint:"Playgrounds abound, yet not the star you seek."},
+  {lat:35.8576, lng:-78.7250, name:"Amber Moon", correct:false, hint:"Retail constellations, still not the destination."},
+  {lat:35.7730, lng:-78.6420, name:"Jade Comet", correct:false, hint:"Trails and vistas, but not your chosen star."},
+  {lat:35.7854, lng:-78.6704, name:"Onyx Star", correct:false, hint:"Rides and fun, yet off the course you run."},
+  {lat:35.7860, lng:-78.7760, name:"Pearl Planet", correct:false, hint:"Paths and playgrounds, but not your mission’s jewel."},
+  {lat:35.6900, lng:-78.6230, name:"Quartz Cluster", correct:false, hint:"Water’s edge, yet off your map today."},
+  {lat:35.7790, lng:-78.6380, name:"Ruby Star", correct:false, hint:"Events and halls, not where your star calls."},
+  {lat:35.7725, lng:-78.6723, name:"Silver Comet", correct:false, hint:"Masterpieces and lights, but off your flight."},
+  {lat:35.8363, lng:-78.7600, name:"Titanium Moon", correct:false, hint:"Deep in the trees, but not your star’s keys."},
+  {lat:35.7860, lng:-78.7760, name:"Obsidian Planet", correct:false, hint:"Metro trails, yet not the celestial sails."},
+  {lat:35.7860, lng:-78.7760, name:"Violet Nebula", correct:false, hint:"Artistic lights, not your starry nights."},
+  {lat:35.7321, lng:-78.8501, name:"Magenta Star", correct:false, hint:"A hilltop view, still not the target true."},
+  {lat:35.7730, lng:-78.6420, name:"Cyan Comet", correct:false, hint:"Open fields, but off the space yield."},
+  {lat:35.8576, lng:-78.7250, name:"Amber Star", correct:false, hint:"Pavilion shines, yet not your lines."},
 ];
-const correctIndex = 0;
+
 let markers = [];
 let map;
 
 // Initialize map
-map = L.map('map').setView([35.78, -78.78], 12); // Centered on Cary/Raleigh/Apex
+map = L.map('map').setView([35.78, -78.78], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
 // Create markers
 locations.forEach((loc,i)=>{
-  const marker = L.marker([loc.lat, loc.lng]).addTo(map).bindPopup(loc.name);
+  const marker = L.marker([loc.lat, loc.lng]).addTo(map).bindPopup(loc.hint);
   marker.on('click', ()=>onMarkerClick(i));
   markers.push(marker);
 });
@@ -55,7 +75,7 @@ function enableMarkers(){ markers.forEach((m,i)=>m.on('click',()=>onMarkerClick(
 
 // Handle marker clicks
 function onMarkerClick(index){
-  if(index === correctIndex){
+  if(locations[index].correct){
     document.getElementById('status').textContent = 'Navigation Complete! ✅';
     disableMarkers();
     document.getElementById('retryBtn').style.display='none';
