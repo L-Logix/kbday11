@@ -185,7 +185,8 @@ function handleClick(e){
       if(penalty <= 0){
         clearInterval(penaltyInterval);
         waiting = false;
-        loadThreat();
+        currentThreat++; // increment threat here!
+        loadThreat();    // now loads next threat correctly
       }
     }, 1000);
   }
