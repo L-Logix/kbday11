@@ -1,127 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Hull Integrity Control</title>
 <style>
+  :root {
+    --bg: #000;
+    --panel-bg: #010;
+    --accent: #00e676; /* green */
+    --muted: #66ffb3;
+    --danger: #ff5252;
+    --panel-size: 110px;
+    --gap: 12px;
+  }
+
+  html,body { height:100%; margin:0; }
   body {
-    background:#000;
-    color:#0f0;
-    font-family:'Share Tech Mono', monospace;
-    padding:30px;
+    background: var(--bg);
+    color: var(--accent);
+    font-family: "Share Tech Mono", "Courier New", monospace;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  #frame {
+    width: 820px;
+    max-width: 100%;
+    background: var(--panel-bg);
+    border: 1px solid rgba(0,230,118,0.14);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 24px rgba(0,230,118,0.04);
+  }
+
+  h1 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: var(--accent);
+  }
+  p.lead {
+    margin: 0 0 18px 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* timer + status row */
+  .status-row {
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom: 14px;
+  }
+  .timer-box {
+    background: #001a00;
+    border: 1px solid rgba(0,230,118,0.12);
+    padding:10px 14px;
+    border-radius:6px;
+    font-weight:700;
+    color:var(--accent);
+    min-width:120px;
     text-align:center;
   }
-  #terminal {
-    border:1px solid #0f0;
-    padding:20px;
-    border-radius:8px;
-    max-width:600px;
-    margin:auto;
-    background:#010;
+  .instructions {
+    color: var(--muted);
+    font-size: 13px;
   }
-  .line { margin:10px 0; }
+
+  /* grid */
   .grid {
     display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:10px;
-    margin-top:20px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap);
+    justify-items:stretch;
+    margin-top:8px;
   }
-  .panel {
-    border:2px solid #0f0;
-    text-align:center;
-    padding:20px 0;
+  .cell {
+    height: var(--panel-size);
+    min-height: var(--panel-size);
+    display:flex;
+    align-items:center;
+    justify-content:center;
     border-radius:8px;
+    border:2px solid rgba(0,230,118,0.18);
     cursor:pointer;
     user-select:none;
-    transition:0.2s;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    color: var(--accent);
+    background: transparent;
+    font-size:18px;
+    box-shadow: inset 0 0 0 rgba(0,0,0,0);
   }
-  .panel:hover { background:#030; }
-  .locked { pointer-events:none; opacity:0.5; }
-  .success { background:#0f0; color:#000; font-weight:bold; }
-  .fail { background:#f00; color:#000; font-weight:bold; }
-  button {
-    background:#000;
-    color:#0f0;
-    border:1px solid #0f0;
-    padding:8px 12px;
-    cursor:pointer;
-    font-family:monospace;
+
+  .cell:active { transform: scale(.995); }
+  .cell.locked { pointer-events: none; opacity: .55; }
+  .cell.selected { background: var(--accent); color: #000; font-weight:700; box-shadow: 0 6px 18px rgba(0,230,118,0.06); }
+  .cell.wrong { background: var(--danger); color: #000; font-weight:700; }
+
+  /* feedback */
+  #feedback {
+    margin-top:14px;
+    min-height: 40px;
+    color: var(--muted);
+    white-space:pre-wrap;
+    font-size: 14px;
   }
+
+  /* small */
+  .small { font-size:12px; color: #9ef9c9; }
 </style>
 </head>
 <body>
-<div id="terminal">
-  <div class="line">> HULL INTEGRITY SYSTEM ONLINE</div>
-  <div class="line">> Stabilizers cooling — please wait...</div>
-  <div class="line">> TIMER: <span id="timer">45</span> seconds</div>
-  
-  <div id="grid" class="grid"></div>
-  <div id="feedback" class="line"></div>
-</div>
+  <div id="frame" role="main" aria-live="polite">
+    <h1>Hull Integrity Control</h1>
+    <p class="lead">Stabilizers require a cooling cycle before an attempt. Wait for the timer, then select the damaged panel once. Incorrect selections enforce a 45 second lockout.</p>
+
+    <div class="status-row" aria-hidden="false">
+      <div class="timer-box" id="timerBox" aria-label="Cooling timer">LOCKED — <span id="timer">45</span>s</div>
+      <div class="instructions">Status: <span id="statusText">Cooling</span></div>
+    </div>
+
+    <div class="grid" id="grid" aria-hidden="false" role="group" aria-label="Hull panels">
+      <!-- cells created by JS -->
+    </div>
+
+    <div id="feedback" aria-live="assertive"></div>
+    <div class="small" style="margin-top:10px;">Only one attempt allowed per cooldown period. Choose carefully.</div>
+  </div>
 
 <script>
-const grid = document.getElementById('grid');
-const feedback = document.getElementById('feedback');
-const timerDisplay = document.getElementById('timer');
-let timer = 45;
-let canSelect = false;
-const correctPanel = 'C'; // ✅ Correct hull panel
+(function(){
+  // CONFIG
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+  const SHEET_INDEX = 6;               // sheets index to update on success
+  const COOLDOWN_SECONDS = 45;         // cooldown length
+  const PANEL_LABELS = ['A','B','C','D','E','F','G','H'];
+  const CORRECT_PANEL = 'C';           // correct selection
 
-function makeGrid() {
-  const letters = ['A','B','C','D','E','F','G','H'];
-  for (const l of letters) {
+  // STATE
+  let timeLeft = COOLDOWN_SECONDS;
+  let timerInterval = null;
+  let selectable = false;
+  let lockedPermanently = false;
+
+  // DOM
+  const grid = document.getElementById('grid');
+  const feedback = document.getElementById('feedback');
+  const timerEl = document.getElementById('timer');
+  const statusText = document.getElementById('statusText');
+
+  // Init grid
+  PANEL_LABELS.forEach(label => {
     const div = document.createElement('div');
-    div.className = 'panel locked';
-    div.textContent = l;
-    div.addEventListener('click', ()=>selectPanel(l, div));
+    div.className = 'cell locked';
+    div.setAttribute('role','button');
+    div.setAttribute('tabindex', '0');
+    div.dataset.id = label;
+    div.textContent = label;
+    div.addEventListener('click', onPanelClick);
+    div.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') onPanelClick.call(div, e); });
     grid.appendChild(div);
-  }
-}
-makeGrid();
+  });
 
-function startTimer() {
-  feedback.textContent = '> Cooling in progress...';
-  timer = 45;
-  timerDisplay.textContent = timer;
-  const countdown = setInterval(()=>{
-    timer--;
-    timerDisplay.textContent = timer;
-    if (timer <= 0) {
-      clearInterval(countdown);
-      unlockPanels();
-      feedback.textContent = '> Cooling complete — Choose one hull section to seal.';
+  // start initial cooldown
+  startCooldown();
+
+  // Helper: set feedback message
+  function setFeedback(msg, type) {
+    feedback.textContent = msg || '';
+    feedback.className = type ? type : '';
+  }
+
+  // enable selection
+  function enableSelection() {
+    selectable = true;
+    statusText.textContent = 'Ready — make one selection';
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('locked'));
+  }
+
+  // disable selection (cooldown)
+  function disableSelection() {
+    selectable = false;
+    statusText.textContent = 'Cooling';
+    document.querySelectorAll('.cell').forEach(c => c.classList.add('locked'));
+  }
+
+  // start cooldown timer and show countdown
+  function startCooldown() {
+    // ensure no further clicks
+    disableSelection();
+    clearInterval(timerInterval);
+    timeLeft = COOLDOWN_SECONDS;
+    timerEl.textContent = timeLeft;
+    setFeedback('Cooldown in progress. Please wait until the timer reaches zero.', ''); 
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerEl.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        timerEl.textContent = 0;
+        enableSelection();
+      }
+    }, 1000);
+  }
+
+  // lock permanently after success
+  function lockPermanently() {
+    lockedPermanently = true;
+    selectable = false;
+    document.querySelectorAll('.cell').forEach(c => {
+      c.classList.add('locked');
+      c.setAttribute('aria-disabled','true');
+    });
+    statusText.textContent = 'Sealed';
+  }
+
+  // reset any transient highlights (on wrong)
+  function resetHighlights() {
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('selected','wrong'));
+  }
+
+  // handle panel click
+  async function onPanelClick(e) {
+    if (!selectable || lockedPermanently) return;
+    const node = this;
+    const id = node.dataset.id;
+
+    // make selection visually
+    resetHighlights();
+    node.classList.add('selected');
+    setFeedback('Selection made: ' + id + '. Running seal procedure...', '');
+
+    // single attempt only this cycle
+    disableSelection();
+
+    // check correctness
+    if (id === CORRECT_PANEL) {
+      // success
+      node.classList.add('selected');
+      setFeedback('Seal successful. Hull integrity restored.', '');
+      lockPermanently();
+      // post to sheet (best-effort)
+      try {
+        await fetch(`${API_URL}?index=${SHEET_INDEX}&status=ON`, { method: 'POST' });
+      } catch (err) {
+        // network failures should not break UX — show note
+        console.error('Failed to update sheet:', err);
+        setFeedback('Seal successful. Hull integrity restored. (Server update failed.)', '');
+      }
+    } else {
+      // failure: mark wrong, enforce cooldown again
+      node.classList.add('wrong');
+      setFeedback('Seal failed. System requires cooldown before another attempt.', '');
+      // restart cooldown after short pause so he sees the wrong flash
+      setTimeout(() => {
+        resetHighlights();
+        startCooldown();
+      }, 900);
     }
-  },1000);
-}
-
-function unlockPanels() {
-  canSelect = true;
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('locked'));
-}
-
-function lockPanels() {
-  canSelect = false;
-  document.querySelectorAll('.panel').forEach(p => p.classList.add('locked'));
-}
-
-function selectPanel(id, el) {
-  if (!canSelect) return;
-  if (id === correctPanel) {
-    el.classList.add('success');
-    feedback.textContent = '> SEAL SUCCESSFUL — HULL INTEGRITY RESTORED.';
-    lockPanels();
-  } else {
-    el.classList.add('fail');
-    feedback.textContent = '> SEAL FAILED — SYSTEM COOLING REQUIRED (45s LOCKOUT)';
-    lockPanels();
-    setTimeout(()=>{
-      el.classList.remove('fail');
-      startTimer();
-    }, 1000); // small delay before restarting
   }
-}
 
-startTimer();
+  // Optional: on load check server if already completed (keeps UI in sync)
+  (function checkRemoteStatus(){
+    fetch(API_URL).then(r => r.json()).then(data => {
+      // if sheet index indicates done, lock permanently and highlight correct panel
+      if (data && data[SHEET_INDEX] === 'ON') {
+        document.querySelectorAll('.cell').forEach(c => {
+          if (c.dataset.id === CORRECT_PANEL) c.classList.add('selected');
+          c.classList.add('locked');
+        });
+        timerEl.textContent = '—';
+        statusText.textContent = 'Sealed';
+        setFeedback('Hull previously sealed.', '');
+        lockedPermanently = true;
+      }
+    }).catch(()=>{/*ignore network errors, allow local play*/});
+  })();
+
+})();
 </script>
 </body>
 </html>
