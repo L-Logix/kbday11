@@ -4,294 +4,93 @@
 <meta charset="UTF-8">
 <title>Spaceship Dashboard - Client</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+  body { background: #0b0c0f; color: #00ff99; font-family: 'Orbitron', sans-serif; margin:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:20px; }
+  h1 { font-weight:700; letter-spacing:0.15em; text-shadow:0 0 10px #00ff99,0 0 20px #00ff99; margin-bottom:20px; text-align:center; }
+  .dashboard { position:relative; width:650px; height:650px; }
+  .button-container { position:absolute; display:flex; flex-direction:column; align-items:center; user-select:none; transition:transform 0.3s ease; }
+  .button-container:hover { transform:scale(1.1); filter:drop-shadow(0 0 12px #00ff99); z-index:10; }
+  a.button {
+    width:100px; height:100px; background:#11181f; border-radius:25px; border:3px solid #00ff99;
+    box-shadow: inset 0 0 20px #007f44, 0 0 20px #00ff99; display:flex; justify-content:center; align-items:center;
+    font-weight:900; font-size:0.7rem; color:#00ff99; letter-spacing:0.05em; text-decoration:none; cursor:pointer;
+    transition: box-shadow 0.3s, border-color 0.3s, color 0.3s; text-align:center; padding:8px; line-height:1.2; flex-wrap:wrap;
+  }
+  a.button.off { border-color:#ff3b3b; box-shadow: inset 0 0 20px #7f0000,0 0 20px #ff3b3b; color:#ff3b3b; text-shadow:0 0 12px #ff3b3b; }
+  .main-button-container { position:absolute; width:260px; height:260px; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; align-items:center; justify-content:center; z-index:20; }
+  a.main-button { width:220px; height:220px; background:#11181f; border-radius:40px; border:3px solid #00ff99; font-weight:900; letter-spacing:0.1em; font-size:2.6rem; color:#00ff99; text-align:center; line-height:220px; text-shadow:0 0 12px #00ff99; box-shadow: inset 0 0 20px #007f44,0 0 20px #00ff99; text-decoration:none; cursor:pointer; }
+  a.main-button.off { border-color:#ff3b3b; box-shadow: inset 0 0 20px #7f0000,0 0 20px #ff3b3b; color:#ff3b3b; text-shadow:0 0 12px #ff3b3b; }
+  .light { position:absolute; bottom:14px; right:14px; width:32px; height:32px; border-radius:50%; background:#700000; box-shadow:0 0 8px #300; border:2px solid #330000; pointer-events:none; }
+  .light.on { background:#0f0; box-shadow:0 0 18px #0f0; border-color:#0a0; }
 
-body {
-  background: #0b0c0f;
-  color: #00ff99;
-  font-family: 'Orbitron', monospace;
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  overflow: hidden;
-}
-
-h1 {
-  margin-bottom: 20px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99;
-}
-
-.dashboard {
-  position: relative;
-  width: 650px;
-  height: 650px;
-}
-
-.button-container {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  user-select: none;
-  transition: transform 0.3s ease;
-}
-
-.button-container:hover {
-  transform: scale(1.1);
-  filter: drop-shadow(0 0 12px #00ff99);
-  z-index: 10;
-}
-
-a.button {
-  width: 100px;
-  height: 100px;
-  background: #11181f;
-  border-radius: 25px;
-  border: 3px solid #00ff99;
-  box-shadow: inset 0 0 20px #007f44, 0 0 20px #00ff99;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: 900;
-  font-size: 0.7rem;
-  color: #00ff99;
-  letter-spacing: 0.05em;
-  text-shadow: 0 0 8px #00ff99;
-  position: relative;
-  text-decoration: none;
-  cursor: pointer;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-  user-select: none;
-  padding: 8px;
-  text-align: center;
-  line-height: 1.2;
-  flex-wrap: wrap;
-  white-space: normal;
-}
-
-a.button.off {
-  border-color: #ff3b3b;
-  box-shadow: inset 0 0 20px #7f0000, 0 0 20px #ff3b3b;
-  color: #ff3b3b;
-  text-shadow: 0 0 12px #ff3b3b;
-}
-
-/* Main STATUS button center */
-.main-button-container {
-  position: absolute;
-  width: 260px;
-  height: 260px;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  user-select: none;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-a.main-button {
-  width: 220px;
-  height: 220px;
-  background: #11181f;
-  border-radius: 40px;
-  border: 3px solid #00ff99;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  font-size: 2.6rem;
-  color: #00ff99;
-  text-align: center;
-  line-height: 220px;
-  text-shadow: 0 0 12px #00ff99;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-  box-shadow: inset 0 0 20px #007f44, 0 0 20px #00ff99;
-  user-select: none;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-a.main-button.off {
-  border-color: #ff3b3b;
-  box-shadow: inset 0 0 20px #7f0000, 0 0 20px #ff3b3b;
-  color: #ff3b3b;
-  text-shadow: 0 0 12px #ff3b3b;
-}
-
-/* Light indicator */
-.light {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #700000;
-  box-shadow: 0 0 8px #300;
-  transition: background 0.3s, box-shadow 0.3s, border-color 0.3s;
-  border: 2px solid #330000;
-  user-select: none;
-  pointer-events: none;
-}
-
-.light.on {
-  background: #0f0;
-  box-shadow: 0 0 18px #0f0;
-  border-color: #0a0;
-}
-
-/* Notes Button */
-#notesButton {
-  position: fixed;
-  bottom: 20px;
-  font-family: 'Orbitron', monospace;
-  background: #11181f;
-  border: 3px solid #00ff99;
-  border-radius: 15px;
-  color: #00ff99;
-  padding: 12px 20px;
-  text-decoration: none;
-  cursor: pointer;
-  z-index: 50;
-  transition: all 0.3s ease;
-}
-
-#notesButton:hover {
-  background: #00ff99;
-  color: #0b0c0f;
-}
+  /* Notes/Chat button */
+  .extra-button { margin-top:20px; width:180px; height:60px; background:#11181f; border:3px solid #00ff99; border-radius:15px; display:flex; justify-content:center; align-items:center; color:#00ff99; text-decoration:none; font-weight:700; text-align:center; line-height:1.2; box-shadow: inset 0 0 10px #007f44, 0 0 10px #00ff99; }
+  .extra-button:hover { filter:drop-shadow(0 0 12px #00ff99); }
 </style>
 </head>
 <body>
 <h1>Spaceship Dashboard - Client View</h1>
 <div class="dashboard" id="dashboard"></div>
 
-<!-- Notes Button -->
-<a id="notesButton" href="notes.html">Notes</a>
+<!-- Extra Buttons -->
+<a href="notes.html" class="extra-button">Notes</a>
+<a href="chat-player.html" class="extra-button">Chat with Manager</a>
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
 const dashboard = document.getElementById('dashboard');
 
 const buttonLinks = [
-  'sublight-engines.html',
-  'hyperdrive.html',
-  'hyperdrive-motivator.html',
-  'power-reactor.html',
-  'deflector-shields.html',
-  'hull.html',
-  'weapons.html',
-  'tractor-beams.html',
-  'bridge.html',
-  'navicomputer.html',
-  'life-support.html'
+  'sublight-engines.html','hyperdrive.html','hyperdrive-motivator.html','power-reactor.html',
+  'deflector-shields.html','hull.html','weapons.html','tractor-beams.html',
+  'bridge.html','navicomputer.html','life-support.html'
 ];
 
 const systemNames = [
-  'Sublight Engines',
-  'Hyperdrive',
-  'Hyperdrive Motivator',
-  'Power Reactor',
-  'Deflector Shields',
-  'Hull',
-  'Weapons',
-  'Tractor Beams',
-  'Bridge/Cockpit',
-  'Navicomputer',
-  'Life Support'
+  'Sublight Engines','Hyperdrive','Hyperdrive Motivator','Power Reactor','Deflector Shields',
+  'Hull','Weapons','Tractor Beams','Bridge/Cockpit','Navicomputer','Life Support'
 ];
-
-const STATUS_PAGE_URL = 'mission-status.html';
 
 function createButtons() {
   const containers = [];
-  for (let i = 0; i < 11; i++) {
-    const container = document.createElement('div');
-    container.className = 'button-container';
-    const button = document.createElement('a');
-    button.className = 'button';
-    button.textContent = systemNames[i];
-    button.href = buttonLinks[i];
-    button.rel = 'noopener noreferrer';
-    const light = document.createElement('div');
-    light.className = 'light';
-    light.id = `light-${i}`;
-    container.appendChild(button);
-    container.appendChild(light);
-    dashboard.appendChild(container);
-    containers.push(container);
+  for(let i=0;i<11;i++){
+    const container = document.createElement('div'); container.className='button-container';
+    const button = document.createElement('a'); button.className='button'; button.textContent=systemNames[i]; button.href=buttonLinks[i];
+    const light = document.createElement('div'); light.className='light'; light.id=`light-${i}`;
+    container.appendChild(button); container.appendChild(light); dashboard.appendChild(container); containers.push(container);
   }
-
-  // STATUS button in center
-  const mainContainer = document.createElement('div');
-  mainContainer.className = 'main-button-container';
-  const mainButton = document.createElement('a');
-  mainButton.className = 'button main-button off';
-  mainButton.textContent = 'STATUS';
-  mainButton.href = STATUS_PAGE_URL;
-  mainButton.rel = 'noopener noreferrer';
-  mainContainer.appendChild(mainButton);
-  dashboard.appendChild(mainContainer);
-
+  const mainContainer = document.createElement('div'); mainContainer.className='main-button-container';
+  const mainButton = document.createElement('a'); mainButton.className='button main-button'; mainButton.textContent='STATUS'; mainButton.href='mission-status.html';
+  mainContainer.appendChild(mainButton); dashboard.appendChild(mainContainer); containers.push(mainContainer);
   return containers;
 }
 
-function positionButtons(buttonContainers, centerX, centerY, radius) {
-  for (let i = 0; i < 11; i++) {
-    const container = buttonContainers[i];
-    const angle = (i / 11) * (2 * Math.PI) - Math.PI/2;
-    const x = centerX + radius * Math.cos(angle);
-    const y = centerY + radius * Math.sin(angle);
-    container.style.left = `${x}px`;
-    container.style.top = `${y}px`;
-    container.style.transform = 'translate(-50%, -50%)';
+function positionButtons(buttonContainers, centerX, centerY, radius){
+  for(let i=0;i<11;i++){
+    const container=buttonContainers[i];
+    const angle=(i/11)*(2*Math.PI)-Math.PI/2;
+    const x=centerX+radius*Math.cos(angle); const y=centerY+radius*Math.sin(angle);
+    container.style.left=`${x}px`; container.style.top=`${y}px`; container.style.transform='translate(-50%,-50%)';
   }
 }
 
-async function updateButtons() {
-  try {
-    const res = await fetch(API_URL);
-    const statuses = await res.json();
-    let allOn = true;
-
-    for (let i = 0; i < 11; i++) {
-      const container = dashboard.children[i];
-      const button = container.querySelector('a.button');
-      const light = container.querySelector('.light');
-      if (statuses[i] === 'ON') {
-        button.classList.remove('off');
-        light.classList.add('on');
-      } else {
-        button.classList.add('off');
-        light.classList.remove('on');
-        allOn = false;
-      }
+async function updateButtons(){
+  try{
+    const res=await fetch(API_URL); const statuses=await res.json();
+    for(let i=0;i<11;i++){
+      const container=dashboard.children[i]; const button=container.querySelector('a.button'); const light=container.querySelector('.light');
+      if(statuses[i]==='ON'){ button.classList.remove('off'); light.classList.add('on'); } else { button.classList.add('off'); light.classList.remove('on'); }
     }
-
-    // Update main STATUS button
-    const mainButton = dashboard.querySelector('.main-button');
-    if (allOn) mainButton.classList.remove('off');
-    else mainButton.classList.add('off');
-  } catch(e) {
-    console.error('Failed to update button status:', e);
-  }
+    const allOn=statuses.every(s=>'ON'===s);
+    const mainButton=dashboard.querySelector('.main-button');
+    if(allOn){ mainButton.classList.remove('off'); } else { mainButton.classList.add('off'); }
+  }catch(e){console.error('Failed to update button status:',e);}
 }
 
-// Initialize
-const buttons = createButtons();
-positionButtons(buttons, 325, 325, 250);
-updateButtons();
-setInterval(updateButtons, 3000);
-
-window.addEventListener('resize', ()=> {
-  positionButtons(buttons, 325, 325, 250);
-});
+const buttons=createButtons();
+positionButtons(buttons,325,325,250);
+updateButtons(); setInterval(updateButtons,3000);
+window.addEventListener('resize',()=>{positionButtons(buttons,325,325,250);});
 </script>
 </body>
 </html>
