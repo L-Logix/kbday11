@@ -11,7 +11,6 @@ body {
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:flex-start;
   padding:20px;
 }
 h1 { text-shadow:0 0 15px #00ff99; margin-bottom:20px; }
@@ -24,7 +23,7 @@ h1 { text-shadow:0 0 15px #00ff99; margin-bottom:20px; }
   background:#11181f;
   border-radius:10px;
 }
-.message { margin:8px 0; padding:8px 12px; border-radius:15px; max-width:70%; position:relative; box-shadow:0 0 8px #00ff99; }
+.message { margin:8px 0; padding:8px 12px; border-radius:15px; max-width:70%; box-shadow:0 0 8px #00ff99; }
 .player { background:#007f44; color:#0f0; margin-left:auto; text-align:right; }
 .manager { background:#3333aa; color:#66f; margin-right:auto; text-align:left; }
 .timestamp { display:block; font-size:0.6rem; color:#aaa; margin-top:4px; }
@@ -41,7 +40,7 @@ h1 { text-shadow:0 0 15px #00ff99; margin-bottom:20px; }
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbxvrgcHuMbV30TUTlYUs8p9doWgqCiNp-JTUK5nfcY43tbFIuSag_xbkQQ8zdmCihBf/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyfVOmU5cjEOAjFAR-gy-yVYbtI56Ub_U-Id6CsP-2MfVetfl9n0d0m97pk6-7-To_S/exec';
 const chatBox = document.getElementById('chatBox');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -65,14 +64,14 @@ async function sendMessage() {
   const msg = messageInput.value.trim();
   if(!msg) return;
   try {
-    await fetch(API_URL, {
+    const res = await fetch(API_URL, {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({Sender:'Manager', Message:msg})
     });
+    if(!res.ok) throw new Error('Network response not ok');
     messageInput.value = '';
     loadMessages();
-  } catch(e) { console.error('Send message error', e); }
+  } catch(e) { console.error('Send message error', e); alert('Failed to send message'); }
 }
 
 sendBtn.addEventListener('click', sendMessage);
