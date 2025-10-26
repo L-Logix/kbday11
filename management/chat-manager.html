@@ -23,10 +23,17 @@ h1 { text-shadow:0 0 15px #00ff99; margin-bottom:20px; }
   background:#11181f;
   border-radius:10px;
 }
-.message { margin:8px 0; padding:8px 12px; border-radius:15px; max-width:70%; box-shadow:0 0 8px #00ff99; }
+.message {
+  margin:8px 0;
+  padding:8px 12px;
+  border-radius:15px;
+  max-width:70%;
+  position:relative;
+  box-shadow:0 0 8px #00ff99;
+}
 .player { background:#007f44; color:#0f0; margin-left:auto; text-align:right; }
 .manager { background:#3333aa; color:#66f; margin-right:auto; text-align:left; }
-.timestamp { display:block; font-size:0.6rem; color:#aaa; margin-top:4px; }
+.timestamp { display:block; font-size:0.6rem; color:#aaa; margin-top:4px; text-shadow:0 0 5px #00ff99; }
 #messageInput { width:300px; padding:5px; border-radius:5px; border:none; background:#222; color:#0f0; }
 #sendBtn { padding:5px 10px; margin-left:5px; background:#00ff99; color:#0b0c0f; border:none; border-radius:5px; cursor:pointer; }
 </style>
@@ -64,11 +71,10 @@ async function sendMessage() {
   const msg = messageInput.value.trim();
   if(!msg) return;
   try {
-    const res = await fetch(API_URL, {
+    await fetch(API_URL, {
       method:'POST',
       body: JSON.stringify({Sender:'Manager', Message:msg})
     });
-    if(!res.ok) throw new Error('Network response not ok');
     messageInput.value = '';
     loadMessages();
   } catch(e) { console.error('Send message error', e); alert('Failed to send message'); }
