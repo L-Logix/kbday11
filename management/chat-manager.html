@@ -44,14 +44,14 @@
   </style>
 </head>
 <body>
-  <h1>Mission Chat — Command</h1>
+<h1>Mission Chat (Manager)</h1>
   <div id="chat-box"></div>
   <input type="text" id="message" placeholder="Send a hint..." />
   <button onclick="sendMessage()">Send</button>
 
   <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycbxvrgcHuMbV30TUTlYUs8p9doWgqCiNp-JTUK5nfcY43tbFIuSag_xbkQQ8zdmCihBf/exec";
-    const sender = "Command";
+    const sender = "Manager";
 
     async function sendMessage() {
       const msg = document.getElementById("message").value.trim();
