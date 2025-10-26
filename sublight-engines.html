@@ -171,193 +171,191 @@
   <button id="resetBtn">Reset Progress</button>
   <div id="completedMessage"></div>
 
-  <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
-    const cardsContainer = document.getElementById('cards');
-    const statusDiv = document.getElementById('status');
-    const resetBtn = document.getElementById('resetBtn');
-    const completedMessage = document.getElementById('completedMessage');
+ <script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+  const cardsContainer = document.getElementById('cards');
+  const statusDiv = document.getElementById('status');
+  const resetBtn = document.getElementById('resetBtn');
+  const completedMessage = document.getElementById('completedMessage');
 
-    const correctLetters = ['G', 'R', 'E', 'L', 'Q', 'B', 'A', 'P', 'S', 'F'];
+  const correctLetters = ['G', 'R', 'E', 'L', 'Q', 'B', 'a', 'P', 'S', 'F']; // lowercase a for index 6
 
-    let cardStates = [];
+  let cardStates = [];
 
-    function countCorrect() {
-      return cardStates.filter(c => c.correct).length;
-    }
-
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
-    }
-
-    function createCards() {
-      cardsContainer.innerHTML = '';
-      cardStates = [];
-      let indices = [...Array(10).keys()];
-      shuffle(indices);
-
-      for (let i = 0; i < 10; i++) {
-        const idx = indices[i];
-        cardStates[idx] = { attempts: 0, correct: false };
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.dataset.idx = idx;
-
-        const inner = document.createElement('div');
-        inner.className = 'inner-card';
-
-        const front = document.createElement('div');
-        front.className = 'front';
-        front.textContent = (idx + 1);
-
-        const back = document.createElement('div');
-        back.className = 'back';
-
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.maxLength = 1;
-        input.placeholder = 'Letter';
-
-        const submitBtn = document.createElement('button');
-        submitBtn.textContent = 'Submit';
-
-        back.appendChild(input);
-        back.appendChild(submitBtn);
-
-        inner.appendChild(front);
-        inner.appendChild(back);
-        card.appendChild(inner);
-
-        cardsContainer.appendChild(card);
-
-        card.addEventListener('click', () => {
-          if (cardStates[idx].correct) return;
-          card.classList.toggle('flipped');
-          if (card.classList.contains('flipped')) {
-            input.focus();
-          }
-        });
-
-        back.addEventListener('click', e => e.stopPropagation());
-
-        submitBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          checkAnswer(idx, input.value.trim().toUpperCase(), card, input);
-        });
-
-        input.addEventListener('keydown', e => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            submitBtn.click();
-          }
-        });
-      }
-    }
-
-   function checkAnswer(idx, letter, card, input) {
-  // Allow both lowercase and uppercase inputs
-  if (!letter.match(/^[A-Za-z]$/)) {
-    alert('Please enter a valid single letter A-Z');
-    input.value = '';
-    input.focus();
-    return;
+  function countCorrect() {
+    return cardStates.filter(c => c.correct).length;
   }
 
-  if (cardStates[idx].correct) return;
-
-  // Special rule: Fuel Cell 7 requires lowercase 'a'
-  if ((idx === 6 && letter === 'a') || (idx !== 6 && letter.toUpperCase() === correctLetters[idx])) {
-    cardStates[idx].correct = true;
-    card.classList.remove('flipped');
-    const front = card.querySelector('.front');
-    front.style.background = '#007f44';
-    front.style.color = '#0f0';
-    front.style.boxShadow = 'inset 0 0 20px #0f7000, 0 0 20px #0f0';
-    updateStatusText();
-    checkCompletion();
-  } else {
-    cardStates[idx].attempts++;
-    if (cardStates[idx].attempts >= 5) {
-      alert('5 incorrect attempts on this card - Progress reset!');
-      resetProgress();
-    } else {
-      alert(`Incorrect! Attempts left: ${5 - cardStates[idx].attempts}`);
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
     }
-    input.value = '';
-    input.focus();
+    return array;
   }
-}
 
+  function createCards() {
+    cardsContainer.innerHTML = '';
+    cardStates = [];
+    let indices = [...Array(10).keys()];
+    shuffle(indices);
 
-    function updateStatusText() {
-      const correctCount = countCorrect();
-      statusDiv.textContent = `Fuel Cells Activated: ${correctCount} / 10`;
-    }
+    for (let i = 0; i < 10; i++) {
+      const idx = indices[i];
+      cardStates[idx] = { attempts: 0, correct: false };
 
-    function resetProgress() {
-      cardStates = cardStates.map(() => ({ attempts: 0, correct: false }));
-      createCards();
-      updateStatusText();
-      completedMessage.textContent = '';
-    }
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.idx = idx;
 
-    function checkCompletion() {
-      if (countCorrect() === 10) {
-        completedMessage.textContent = 'All Fuel Cells Activated! Sublight Engines Online!';
-        setLight(0, 'ON');  // index 0 for Light 1
-        disableChallenge();
-      }
-    }
+      const inner = document.createElement('div');
+      inner.className = 'inner-card';
 
-    function disableChallenge() {
-      cardsContainer.style.pointerEvents = 'none';
-      resetBtn.disabled = true;
-      statusDiv.textContent = 'Sublight Engines are ONLINE!';
-      statusDiv.style.color = '#0f0';
-      statusDiv.style.textShadow = '0 0 15px #0f0';
-    }
+      const front = document.createElement('div');
+      front.className = 'front';
+      front.textContent = (idx + 1);
 
-    async function fetchStatus() {
-      try {
-        const res = await fetch(API_URL);
-        const statuses = await res.json();
-        if (statuses[0] === 'ON') {
-          disableChallenge();
-        } else {
-          updateStatusText();
+      const back = document.createElement('div');
+      back.className = 'back';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.maxLength = 1;
+      input.placeholder = 'Letter';
+
+      const submitBtn = document.createElement('button');
+      submitBtn.textContent = 'Submit';
+
+      back.appendChild(input);
+      back.appendChild(submitBtn);
+
+      inner.appendChild(front);
+      inner.appendChild(back);
+      card.appendChild(inner);
+
+      cardsContainer.appendChild(card);
+
+      card.addEventListener('click', () => {
+        if (cardStates[idx].correct) return;
+        card.classList.toggle('flipped');
+        if (card.classList.contains('flipped')) {
+          input.focus();
         }
-      } catch (e) {
-        console.error('Failed to fetch status:', e);
-        statusDiv.textContent = 'Error loading status... Try refreshing.';
-      }
+      });
+
+      back.addEventListener('click', e => e.stopPropagation());
+
+      submitBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        checkAnswer(idx, input.value.trim(), card, input); // ← removed .toUpperCase()
+      });
+
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitBtn.click();
+        }
+      });
+    }
+  }
+
+  function checkAnswer(idx, letter, card, input) {
+    // Must be exactly one character A-Z or a-z
+    if (!letter.match(/^[A-Za-z]$/)) {
+      alert('Please enter a valid single letter A-Z');
+      input.value = '';
+      input.focus();
+      return;
     }
 
-    // Your provided POST style using query params and POST method:
-    async function setLight(index, status) {
-      try {
-        await fetch(`${API_URL}?index=${index}&status=${status}`, {
-          method: 'POST',
-        });
-      } catch (e) {
-        console.error("Failed to update light:", e);
-        alert('Failed to update server status. Check your connection.');
-      }
-    }
+    if (cardStates[idx].correct) return;
 
-    resetBtn.addEventListener('click', () => {
-      if(confirm('Are you sure you want to reset your progress?')) {
+    // Compare exactly (case-sensitive)
+    if (letter === correctLetters[idx]) {
+      cardStates[idx].correct = true;
+      card.classList.remove('flipped');
+      const front = card.querySelector('.front');
+      front.style.background = '#007f44';
+      front.style.color = '#0f0';
+      front.style.boxShadow = 'inset 0 0 20px #0f7000, 0 0 20px #0f0';
+      updateStatusText();
+      checkCompletion();
+    } else {
+      cardStates[idx].attempts++;
+      if (cardStates[idx].attempts >= 5) {
+        alert('5 incorrect attempts on this card - Progress reset!');
         resetProgress();
+      } else {
+        alert(`Incorrect! Attempts left: ${5 - cardStates[idx].attempts}`);
       }
-    });
+      input.value = '';
+      input.focus();
+    }
+  }
 
+  function updateStatusText() {
+    const correctCount = countCorrect();
+    statusDiv.textContent = `Fuel Cells Activated: ${correctCount} / 10`;
+  }
+
+  function resetProgress() {
+    cardStates = cardStates.map(() => ({ attempts: 0, correct: false }));
     createCards();
-    fetchStatus();
+    updateStatusText();
+    completedMessage.textContent = '';
+  }
 
-  </script>
+  function checkCompletion() {
+    if (countCorrect() === 10) {
+      completedMessage.textContent = 'All Fuel Cells Activated! Sublight Engines Online!';
+      setLight(0, 'ON');  // index 0 for Light 1
+      disableChallenge();
+    }
+  }
+
+  function disableChallenge() {
+    cardsContainer.style.pointerEvents = 'none';
+    resetBtn.disabled = true;
+    statusDiv.textContent = 'Sublight Engines are ONLINE!';
+    statusDiv.style.color = '#0f0';
+    statusDiv.style.textShadow = '0 0 15px #0f0';
+  }
+
+  async function fetchStatus() {
+    try {
+      const res = await fetch(API_URL);
+      const statuses = await res.json();
+      if (statuses[0] === 'ON') {
+        disableChallenge();
+      } else {
+        updateStatusText();
+      }
+    } catch (e) {
+      console.error('Failed to fetch status:', e);
+      statusDiv.textContent = 'Error loading status... Try refreshing.';
+    }
+  }
+
+  async function setLight(index, status) {
+    try {
+      await fetch(`${API_URL}?index=${index}&status=${status}`, {
+        method: 'POST',
+      });
+    } catch (e) {
+      console.error("Failed to update light:", e);
+      alert('Failed to update server status. Check your connection.');
+    }
+  }
+
+  resetBtn.addEventListener('click', () => {
+    if (confirm('Are you sure you want to reset your progress?')) {
+      resetProgress();
+    }
+  });
+
+  createCards();
+  fetchStatus();
+</script>
+
 </body>
 </html>
