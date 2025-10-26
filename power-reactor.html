@@ -2,156 +2,181 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Power Reactor — Critical Alert</title>
+  <title>Power Reactor Challenge</title>
   <style>
     body {
-      background: #000;
-      color: #0f0;
-      font-family: 'Share Tech Mono', monospace;
+      background: #0b0c0f;
+      color: #00ff99;
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
       margin: 0;
-      padding: 40px;
+      padding: 20px;
     }
-    #terminal {
-      max-width: 760px;
-      margin: 0 auto;
-      border: 1px solid #0f0;
+    h1 { 
+      font-size: 2rem;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px #00ff99, 0 0 20px #00ff99;
+    }
+    table {
+      margin: 0 auto 20px auto;
+      border-collapse: collapse;
+      width: 400px;
+    }
+    th, td {
+      border: 1px solid #00ff99;
+      padding: 10px;
+      font-size: 1.2rem;
+    }
+    th {
+      background: #11181f;
+    }
+    td {
+      background: #11181f;
+    }
+    .module-btn {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      border: 2px solid #00ff99;
       border-radius: 8px;
-      padding: 24px;
-      background: #010;
-      box-shadow: 0 0 20px rgba(0,255,0,0.08);
-    }
-    .line { white-space: pre-wrap; margin: 8px 0; }
-    .muted { color: #66ff66a0; }
-    .error { color: #ff6666; }
-    .success { color: #66ff66; font-weight: bold; }
-    .controls { margin-top: 18px; display: flex; gap: 8px; align-items: center; }
-    input[type="text"] {
-      background: #000;
-      color: #0f0;
-      border: 1px solid #0f0;
-      padding: 8px 10px;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 16px;
-      border-radius: 4px;
-      width: 200px;
-      outline: none;
-      text-transform: uppercase;
-    }
-    button {
-      background: #000;
-      color: #0f0;
-      border: 1px solid #0f0;
-      padding: 8px 12px;
-      font-family: 'Share Tech Mono', monospace;
+      background: #11181f;
+      color: #00ff99;
       cursor: pointer;
-      border-radius: 4px;
+      user-select: none;
+      transition: all 0.2s ease;
     }
-    button:hover { background: #0f0; color: #000; }
-    button:disabled { opacity: 0.45; pointer-events: none; }
-    #timer { font-weight: bold; }
+    .module-btn.selected {
+      background: #0f0;
+      color: #000;
+    }
+    #submitBtn, #retryBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      border: 2px solid #00ff99;
+      border-radius: 10px;
+      background: #11181f;
+      color: #00ff99;
+      cursor: pointer;
+    }
+    #submitBtn:hover, #retryBtn:hover {
+      background: #0f0;
+      color: #000;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 1.4rem;
+    }
   </style>
 </head>
 <body>
-  <div id="terminal">
-    <div class="line">> POWER REACTOR CRITICAL ALERT</div>
-    <div class="line muted">> TIME TO STABILIZE: <span id="timer">60</span> SECONDS</div>
-    <div class="line muted">> ENTER STABILIZATION MODULES (e.g., BDF):</div>
+  <h1>Power Reactor Challenge</h1>
+  <table>
+    <tr><th>Module</th><th>Energy</th></tr>
+    <tr><td>A</td><td>3</td></tr>
+    <tr><td>B</td><td>5</td></tr>
+    <tr><td>C</td><td>2</td></tr>
+    <tr><td>D</td><td>7</td></tr>
+    <tr><td>E</td><td>4</td></tr>
+    <tr><td>F</td><td>6</td></tr>
+    <tr><td>G</td><td>1</td></tr>
+    <tr><td>H</td><td>8</td></tr>
+    <tr><td>I</td><td>9</td></tr>
+  </table>
 
-    <div id="promptArea" class="controls">
-      <input id="answerInput" autocomplete="off" placeholder="Modules" />
-      <button id="submitBtn">STABILIZE</button>
-    </div>
-
-    <div id="feedback" class="line"></div>
-    <div id="lockedArea" class="line success" style="display:none;">
-      > REACTOR STABILIZED — CORE POWER NORMAL  
-      > ACCESS LOCKED — NO FURTHER ACTION
-    </div>
-    <div id="failureArea" class="line error" style="display:none;">
-      > REACTOR OVERLOAD! CORE FAILURE  
-      > TIME EXPIRED
-    </div>
-  </div>
+  <div id="buttonsContainer"></div>
+  <button id="submitBtn">Submit Selection</button>
+  <button id="retryBtn" style="display:none;">Retry</button>
+  <div id="status"></div>
 
   <script>
-    (function(){
-      const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
-      const CORRECT_CODE = 'BDF';
-      const SHEET_INDEX = 3;
-      let timeLeft = 60; // seconds
-      let timerInterval;
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
+    const moduleLetters = ['A','B','C','D','E','F','G','H','I'];
+    const buttonsContainer = document.getElementById('buttonsContainer');
+    const submitBtn = document.getElementById('submitBtn');
+    const retryBtn = document.getElementById('retryBtn');
+    const statusDiv = document.getElementById('status');
 
-      const promptArea = document.getElementById('promptArea');
-      const lockedArea = document.getElementById('lockedArea');
-      const failureArea = document.getElementById('failureArea');
-      const answerInput = document.getElementById('answerInput');
-      const submitBtn = document.getElementById('submitBtn');
-      const feedback = document.getElementById('feedback');
-      const timerDisplay = document.getElementById('timer');
+    // all 8 valid 3-module combos
+    const validCombos = [
+      ['A','B','F'],
+      ['A','C','I'],
+      ['A','D','E'],
+      ['B','C','D'],
+      ['B','G','H'],
+      ['C','E','H'],
+      ['D','F','G'],
+      ['E','G','I']
+    ];
 
-      async function checkStatus() {
-        try {
-          const res = await fetch(API_URL);
-          const data = await res.json();
-          const current = data[SHEET_INDEX];
-          if (current === 'ON') lockSuccess();
-        } catch(e){ /* ignore */ }
-      }
+    let selected = [];
+    let locked = false;
 
-      async function postStatus(state) {
-        try {
-          await fetch(`${API_URL}?index=${SHEET_INDEX}&status=${state}`, { method: 'POST' });
-        } catch(e){ console.error(e); }
-      }
-
-      function lockSuccess() {
-        promptArea.style.display = 'none';
-        lockedArea.style.display = 'block';
-        clearInterval(timerInterval);
-      }
-
-      function lockFailure() {
-        promptArea.style.display = 'none';
-        failureArea.style.display = 'block';
-      }
-
-      function startTimer() {
-        timerInterval = setInterval(() => {
-          timeLeft--;
-          timerDisplay.textContent = timeLeft;
-          if(timeLeft <= 0) {
-            clearInterval(timerInterval);
-            lockFailure();
-          }
-        }, 1000);
-      }
-
-      submitBtn.addEventListener('click', async () => {
-        const val = (answerInput.value || '').trim().toUpperCase();
-        if(!val) { feedback.textContent = '> ENTER MODULES'; feedback.className='line error'; return; }
-
-        if(val === CORRECT_CODE) {
-          feedback.textContent = '> REACTOR STABILIZED — CORE POWER NORMAL';
-          feedback.className = 'line success';
-          submitBtn.disabled = true;
-          answerInput.disabled = true;
-          await postStatus('ON');
-          setTimeout(lockSuccess, 800);
-        } else {
-          feedback.textContent = '> REACTOR UNSTABLE — TRY AGAIN!';
-          feedback.className = 'line error';
-          answerInput.value = '';
-          answerInput.focus();
+    // create module buttons
+    moduleLetters.forEach(letter => {
+      const btn = document.createElement('button');
+      btn.textContent = letter;
+      btn.className = 'module-btn';
+      btn.onclick = () => {
+        if(locked) return;
+        if(selected.includes(letter)) {
+          selected = selected.filter(x => x !== letter);
+          btn.classList.remove('selected');
+        } else if(selected.length < 3) {
+          selected.push(letter);
+          btn.classList.add('selected');
         }
-      });
+      };
+      buttonsContainer.appendChild(btn);
+    });
 
-      answerInput.addEventListener('keydown', (e)=>{
-        if(e.key==='Enter') submitBtn.click();
-      });
+    function arraysEqual(a,b){
+      return a.length===b.length && a.every(v=>b.includes(v));
+    }
 
-      checkStatus();
-      startTimer();
-    })();
+    function checkSelection(){
+      const sortedSelected = [...selected].sort();
+      const isValid = validCombos.some(combo => arraysEqual(combo, sortedSelected));
+      if(isValid){
+        statusDiv.textContent = '✅ Correct! Reactor Modules Activated!';
+        statusDiv.style.color = '#0f0';
+        lockAll();
+        updateSheet();
+      } else {
+        statusDiv.textContent = '❌ Incorrect! 5 second penalty...';
+        statusDiv.style.color = '#f00';
+        lockAll();
+        retryBtn.style.display = 'inline-block';
+        setTimeout(()=>unlockAll(), 5000);
+      }
+    }
+
+    function lockAll(){
+      locked = true;
+      document.querySelectorAll('.module-btn').forEach(b=>b.disabled=true);
+      submitBtn.disabled = true;
+    }
+
+    function unlockAll(){
+      locked = false;
+      document.querySelectorAll('.module-btn').forEach(b=>b.disabled=false);
+      submitBtn.disabled = false;
+      selected = [];
+      document.querySelectorAll('.module-btn').forEach(b=>b.classList.remove('selected'));
+      retryBtn.style.display='none';
+      statusDiv.textContent='';
+    }
+
+    submitBtn.onclick = checkSelection;
+    retryBtn.onclick = unlockAll;
+
+    async function updateSheet(){
+      try{
+        await fetch(`${API_URL}?index=3&status=ON`, {method:'POST'}); // index 3 for power reactor
+      }catch(e){
+        console.error('Failed to update sheet:', e);
+      }
+    }
   </script>
 </body>
 </html>
