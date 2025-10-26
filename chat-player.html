@@ -1,86 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mission Chat - Player</title>
-  <style>
-    body {
-      background-color: #000;
-      color: #00ff99;
-      font-family: "Courier New", monospace;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #00ffaa;
-    }
-    #chat-box {
-      border: 2px solid #00ffaa;
-      border-radius: 10px;
-      padding: 10px;
-      height: 60vh;
-      overflow-y: auto;
-      background-color: #001a12;
-    }
-    .msg {
-      margin: 6px 0;
-      line-height: 1.4em;
-    }
-    .player {
-      color: #00ffcc;
-    }
-    .manager {
-      color: #ffea00;
-    }
-    input, button {
-      font-family: inherit;
-      font-size: 1rem;
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-    }
-    input {
-      width: 70%;
-      margin-right: 10px;
-    }
-    button {
-      background-color: #00ffaa;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Mission Chat - Kai</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+  body {
+    background: #0b0c0f;
+    color: #00ff99;
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    margin: 0;
+    padding: 10px;
+  }
+
+  h1 {
+    color: #00ff99;
+    text-shadow: 0 0 10px #00ff99;
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+
+  #chat-box {
+    width: 95%;
+    height: 70vh;
+    background: #11181f;
+    border: 2px solid #00ff99;
+    border-radius: 15px;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: inset 0 0 15px #003322;
+  }
+
+  .message {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    font-size: 1rem;
+    word-wrap: break-word;
+    line-height: 1.4em;
+  }
+
+  .kai {
+    background: #00ff99;
+    color: #0b0c0f;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+  }
+
+  .manager {
+    background: #222;
+    color: #00ff99;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+  }
+
+  #input-area {
+    display: flex;
+    width: 95%;
+    margin-top: 15px;
+  }
+
+  #messageInput {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: none;
+    background: #11181f;
+    color: #00ff99;
+    box-shadow: inset 0 0 10px #00ff99;
+  }
+
+  #sendBtn {
+    margin-left: 10px;
+    padding: 10px 15px;
+    background: #00ff99;
+    border: none;
+    color: #0b0c0f;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  #sendBtn:hover {
+    background: #33ffaa;
+  }
+
+  .timestamp {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    margin-top: 2px;
+  }
+</style>
 </head>
 <body>
-  <h1>Mission Chat - Player</h1>
+  <h1>Mission Chat (Kai)</h1>
+
   <div id="chat-box"></div>
-  <div style="margin-top: 10px;">
-    <input type="text" id="messageInput" placeholder="Request a hint..." />
-    <button onclick="sendMessage()">Send</button>
+
+  <div id="input-area">
+    <input id="messageInput" type="text" placeholder="Type your message...">
+    <button id="sendBtn">Send</button>
   </div>
 
   <script>
-    const sheetURL = "https://script.google.com/macros/s/AKfycbxvrgcHuMbV30TUTlYUs8p9doWgqCiNp-JTUK5nfcY43tbFIuSag_xbkQQ8zdmCihBf/exec";
-    const sender = "Player";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxvrgcHuMbV30TUTlYUs8p9doWgqCiNp-JTUK5nfcY43tbFIuSag_xbkQQ8zdmCihBf/exec";
+    const chatBox = document.getElementById("chat-box");
+    const sendBtn = document.getElementById("sendBtn");
+    const input = document.getElementById("messageInput");
 
-    async function sendMessage() {
-      const msg = document.getElementById("messageInput").value.trim();
-      if (!msg) return;
-      await fetch(sheetURL, {
-        method: "POST",
-        body: new URLSearchParams({ sender, message: msg })
-      });
-      document.getElementById("messageInput").value = "";
-      loadMessages();
-    }
+    const senderName = "Kai";
 
     async function loadMessages() {
-      const res = await fetch(sheetURL);
-      const data = await res.json();
-      const chatBox = document.getElementById("chat-box");
-      chatBox.innerHTML = "";
-      data.forEach(row => {
-        const div = document.createElement("div");
-        div.classList.add("msg", row[1].toLowerCase());
-        div.innerHTML = `<b>${row[1]()
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+
+        chatBox.innerHTML = "";
+        data.forEach(row => {
+          const msgDiv = document.createElement("div");
+          msgDiv.classList.add("message", row.Sender === "Kai" ? "kai" : "manager");
+          msgDiv.textContent = row.Message;
+
+          const time = document.createElement("div");
+          time.classList.add("timestamp");
+          time.textContent = row.Timestamp;
+
+          msgDiv.appendChild(time);
+          chatBox.appendChild(msgDiv);
+        });
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (err) {
+        console.error("Error loading chat:", err);
+      }
+    }
+
+    async function sendMessage() {
+      const message = input.value.trim();
+      if (!message) return;
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            Sender: senderName,
+            Message: message
+          }),
+          headers: { "Content-Type": "application/json" }
+        });
+
+        input.value = "";
+        await loadMessages();
+      } catch (err) {
+        console.error("Error sending message:", err);
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    // Refresh every 3 seconds for live chat updates
+    setInterval(loadMessages, 3000);
+
+    loadMessages();
+  </script>
+</body>
+</html>
