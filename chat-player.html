@@ -11,7 +11,6 @@ body {
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:flex-start;
   padding:20px;
 }
 h1 {
@@ -105,14 +104,14 @@ async function sendMessage() {
   const msg = messageInput.value.trim();
   if(!msg) return;
   try {
-    await fetch(API_URL, {
+    const res = await fetch(API_URL, {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({Sender:'Kai', Message:msg})
     });
+    if(!res.ok) throw new Error('Network response was not ok');
     messageInput.value = '';
     loadMessages();
-  } catch(e) { console.error('Send message error', e); }
+  } catch(e) { console.error('Send message error', e); alert('Failed to send message'); }
 }
 
 sendBtn.addEventListener('click', sendMessage);
