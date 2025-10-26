@@ -259,37 +259,40 @@
       }
     }
 
-    function checkAnswer(idx, letter, card, input) {
-      if (!letter.match(/^[A-Z]$/)) {
-        alert('Please enter a valid single letter A-Z');
-        input.value = '';
-        input.focus();
-        return;
-      }
+   function checkAnswer(idx, letter, card, input) {
+  // Allow both lowercase and uppercase inputs
+  if (!letter.match(/^[A-Za-z]$/)) {
+    alert('Please enter a valid single letter A-Z');
+    input.value = '';
+    input.focus();
+    return;
+  }
 
-      if (cardStates[idx].correct) return;
+  if (cardStates[idx].correct) return;
 
-      if (letter === correctLetters[idx]) {
-        cardStates[idx].correct = true;
-        card.classList.remove('flipped');
-        const front = card.querySelector('.front');
-        front.style.background = '#007f44';
-        front.style.color = '#0f0';
-        front.style.boxShadow = 'inset 0 0 20px #0f7000, 0 0 20px #0f0';
-        updateStatusText();
-        checkCompletion();
-      } else {
-        cardStates[idx].attempts++;
-        if (cardStates[idx].attempts >= 5) {
-          alert('5 incorrect attempts on this card - Progress reset!');
-          resetProgress();
-        } else {
-          alert(`Incorrect! Attempts left: ${5 - cardStates[idx].attempts}`);
-        }
-        input.value = '';
-        input.focus();
-      }
+  // Special rule: Fuel Cell 7 requires lowercase 'a'
+  if ((idx === 6 && letter === 'a') || (idx !== 6 && letter.toUpperCase() === correctLetters[idx])) {
+    cardStates[idx].correct = true;
+    card.classList.remove('flipped');
+    const front = card.querySelector('.front');
+    front.style.background = '#007f44';
+    front.style.color = '#0f0';
+    front.style.boxShadow = 'inset 0 0 20px #0f7000, 0 0 20px #0f0';
+    updateStatusText();
+    checkCompletion();
+  } else {
+    cardStates[idx].attempts++;
+    if (cardStates[idx].attempts >= 5) {
+      alert('5 incorrect attempts on this card - Progress reset!');
+      resetProgress();
+    } else {
+      alert(`Incorrect! Attempts left: ${5 - cardStates[idx].attempts}`);
     }
+    input.value = '';
+    input.focus();
+  }
+}
+
 
     function updateStatusText() {
       const correctCount = countCorrect();
