@@ -2,195 +2,153 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Bridge/Cockpit Navigation</title>
+<title>Bridge/Cockpit Challenge</title>
 <style>
-body {
-  background: #0b0c0f;
-  color: #00ff99;
-  font-family: 'Orbitron', monospace;
-  margin: 0;
-  text-align: center;
-  overflow: hidden;
-}
-h1 {
-  margin: 20px 0;
-  text-shadow: 0 0 10px #00ff99;
-}
-canvas {
-  background: #11181f;
-  border: 3px solid #00ff99;
-  display: block;
-  margin: 0 auto;
-  touch-action: none;
-}
-#status { margin-top: 10px; font-size: 1.2rem; font-weight: bold; }
-#timer { margin-top: 10px; font-size: 1rem; }
-.controls {
-  margin-top: 10px;
-}
-button {
-  background: #11181f;
-  border: 3px solid #00ff99;
-  border-radius: 10px;
-  color: #00ff99;
-  font-weight: bold;
-  font-size: 1.2rem;
-  padding: 15px 25px;
-  margin: 5px;
-  cursor: pointer;
-}
-button:active { background: #00ff99; color: #0b0c0f; }
-button:disabled { border-color: #555; color: #555; }
+  body {
+    background: #000;
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Orbitron', sans-serif;
+    color: #0f0;
+    user-select: none;
+  }
+  canvas {
+    display: block;
+    margin: 0 auto;
+    background: #111;
+  }
+  #boostBtn {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    border: 2px solid #0f0;
+    border-radius: 10px;
+    background: #000;
+    color: #0f0;
+    cursor: pointer;
+  }
+  #status {
+    position: absolute;
+    top: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 1.5rem;
+  }
 </style>
 </head>
 <body>
-<h1>Bridge/Cockpit Navigation</h1>
-<canvas id="gameCanvas" width="500" height="600"></canvas>
-<div id="status">Use controls to navigate</div>
-<div id="timer">Time: 45</div>
-<div class="controls">
-  <button id="leftBtn">← Left</button>
-  <button id="boostBtn">↑ Boost</button>
-  <button id="rightBtn">→ Right</button>
-</div>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<button id="boostBtn">BOOST</button>
+<div id="status"></div>
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbwCJEfr5PJguOJ79eDjA3QSiK-qe01gMIqCTTKLtjOst4bsavkNMQSx01QThXejm3UU/exec';
-const challengeIndex = 8; // Bridge/Cockpit
-
-// Check if already completed
-async function checkCompleted() {
-  try {
-    const res = await fetch(API_URL);
-    const statuses = await res.json();
-    if(statuses[challengeIndex] === 'ON'){
-      document.getElementById('status').textContent = 'Already completed ✅';
-      disableControls();
-      clearInterval(gameInterval);
-      clearInterval(asteroidInterval);
-      clearInterval(timerInterval);
-    }
-  } catch(e){ console.error(e); }
-}
-
-// Canvas setup
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const gridCols = 7;
-const cellWidth = canvas.width / gridCols;
-const shipHeight = 30;
-const shipWidth = 40;
+const boostBtn = document.getElementById('boostBtn');
+const statusDiv = document.getElementById('status');
 
-let shipCol = 3;
-let shipRow = canvas.height - shipHeight;
+let ship = { x: 100, y: 300, width: 40, height: 20, speed: 0 };
 let asteroids = [];
-let gameInterval, asteroidInterval, timerInterval;
-let timeLeft = 45;
-let isPlaying = true;
-let boostAvailable = 3;
-let boostCooldown = false;
+let completed = false;
+let lastTime = 0;
 
-// Draw everything
-function draw() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  // Ship
-  ctx.fillStyle = '#00ff99';
-  ctx.fillRect(shipCol*cellWidth + cellWidth/2 - shipWidth/2, shipRow, shipWidth, shipHeight);
-  // Asteroids
-  ctx.fillStyle = '#ff3b3b';
-  asteroids.forEach(a => {
+// Generate asteroids
+function generateAsteroids() {
+  asteroids = [];
+  for(let i=0; i<15; i++){
+    asteroids.push({
+      x: 200 + i*150,
+      y: Math.random()*500 + 50,
+      radius: Math.random()*30 + 20
+    });
+  }
+}
+
+// Draw ship
+function drawShip() {
+  ctx.fillStyle = '#0f0';
+  ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
+}
+
+// Draw asteroids
+function drawAsteroids() {
+  ctx.fillStyle = '#f00';
+  asteroids.forEach(a=>{
     ctx.beginPath();
-    ctx.arc(a.x, a.y + 15, 15, 0, Math.PI*2);
+    ctx.arc(a.x, a.y, a.radius, 0, 2*Math.PI);
     ctx.fill();
   });
 }
 
-// Update positions
-function update() {
-  if(!isPlaying) return;
-
-  let hit = false;
-  asteroids.forEach(a => {
-    a.y += a.speed;
-    if(a.y + 30 > shipRow && a.y < shipRow + shipHeight && a.col === shipCol){
-      hit = true;
-    }
-  });
-
-  if(hit){
-    isPlaying = false;
-    boostAvailable = Math.max(boostAvailable-1,0);
-    document.getElementById('status').textContent = 'Hit! 5-second penalty';
-    disableControls();
-    setTimeout(()=>{
-      resetShip();
-      isPlaying = true;
-      enableControls();
-      document.getElementById('status').textContent = 'Use controls to navigate';
-    },5000);
-  }
-
-  if(shipRow <= 0){
-    isPlaying = false;
-    document.getElementById('status').textContent = 'Navigation Complete! ✅';
-    fetch(`${API_URL}?index=${challengeIndex}&status=ON`,{method:'POST'});
-    disableControls();
-    clearInterval(timerInterval);
-  }
-
-  draw();
+// Move ship
+function updateShip(delta) {
+  ship.x += ship.speed * delta;
+  if(ship.x + ship.width > canvas.width) ship.x = canvas.width - ship.width;
 }
 
-// Reset ship
-function resetShip(){
-  shipCol = 3;
-  shipRow = canvas.height - shipHeight;
-}
-
-// Timer
-timerInterval = setInterval(()=>{
-  if(isPlaying){
-    timeLeft--;
-    document.getElementById('timer').textContent = 'Time: '+timeLeft;
-    if(timeLeft<=0){
-      isPlaying=false;
-      document.getElementById('status').textContent='Time up! Restart challenge.';
-      disableControls();
+// Check collisions
+function checkCollision() {
+  for(let a of asteroids){
+    const dx = ship.x + ship.width/2 - a.x;
+    const dy = ship.y + ship.height/2 - a.y;
+    const distance = Math.sqrt(dx*dx + dy*dy);
+    if(distance < a.radius + Math.max(ship.width, ship.height)/2){
+      return true;
     }
   }
-},1000);
-
-// Create asteroids
-function createAsteroid(){
-  const col = Math.floor(Math.random()*gridCols);
-  asteroids.push({col,x:col*cellWidth + cellWidth/2, y:-30, speed:Math.random()*2 + 2});
+  return false;
 }
-
-// Controls
-const leftBtn = document.getElementById('leftBtn');
-const rightBtn = document.getElementById('rightBtn');
-const boostBtn = document.getElementById('boostBtn');
-
-function disableControls(){ leftBtn.disabled = rightBtn.disabled = boostBtn.disabled = true; }
-function enableControls(){ leftBtn.disabled = rightBtn.disabled = boostBtn.disabled = false; }
-
-leftBtn.addEventListener('click',()=>{ if(shipCol>0) shipCol--; });
-rightBtn.addEventListener('click',()=>{ if(shipCol<gridCols-1) shipCol++; });
-boostBtn.addEventListener('click',()=>{
-  if(boostAvailable>0 && !boostCooldown){
-    shipRow -= 30; // Boost moves 1 row
-    boostAvailable--;
-    boostCooldown = true;
-    setTimeout(()=>{ boostCooldown=false; }, 1000); // 1s cooldown
-  }
-});
 
 // Game loop
-gameInterval = setInterval(update,30);
-asteroidInterval = setInterval(createAsteroid, 700+Math.random()*500);
+function gameLoop(timestamp){
+  const delta = (timestamp - lastTime)/16;
+  lastTime = timestamp;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-// Initial check
-checkCompleted();
+  updateShip(delta);
+  drawShip();
+  drawAsteroids();
+
+  if(checkCollision()){
+    ship.x -= 5; // push back a little
+    statusDiv.textContent = '💥 Collision! Wait 2 seconds...';
+    boostBtn.disabled = true;
+    setTimeout(()=>{ boostBtn.disabled=false; statusDiv.textContent=''; },2000);
+  }
+
+  // Check completion
+  if(ship.x + ship.width >= canvas.width && !completed){
+    completed = true;
+    statusDiv.textContent = '🚀 Bridge Challenge Complete!';
+    boostBtn.disabled = true;
+    updateSheet();
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// Boost button
+boostBtn.onclick = () => {
+  ship.speed = 6;
+  setTimeout(()=>{ ship.speed=0; }, 200); // short burst
+}
+
+// Initialize
+generateAsteroids();
+requestAnimationFrame(gameLoop);
+
+// Google Sheet update
+async function updateSheet(){
+  try{
+    await fetch(`${API_URL}?index=8&status=ON`, {method:'POST'}); // index 8 = bridge
+  }catch(e){
+    console.error('Failed to update sheet:', e);
+  }
+}
 </script>
 </body>
 </html>
