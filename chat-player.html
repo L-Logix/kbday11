@@ -1,167 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>Mission Chat — Kai</title>
+<meta charset="UTF-8">
+<title>Chat - Kai</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
-  :root { --bg:#0b0c0f; --accent:#00ff99; --muted:#11181f; }
-  body{ font-family:Orbitron, monospace; background:var(--bg); color:var(--accent); margin:0; padding:12px; display:flex; flex-direction:column; height:100vh; }
-  h1{ margin:6px 0 12px; text-align:center; font-size:1.2rem;}
-  #chat-box{ flex:1; background:var(--muted); border:2px solid var(--accent); border-radius:12px; padding:12px; overflow:auto; display:flex; flex-direction:column; gap:8px;}
-  .bubble{ max-width:78%; padding:10px 12px; border-radius:14px; line-height:1.3; word-break:break-word; box-shadow:0 2px 0 rgba(0,0,0,0.4);}
-  .kai{ background:var(--accent); color:#07110b; align-self:flex-end; border-bottom-right-radius:4px;}
-  .manager{ background:#141a14; color:var(--accent); align-self:flex-start; border-bottom-left-radius:4px;}
-  .meta{ font-size:0.7rem; opacity:0.6; margin-top:6px; }
-  #form{ display:flex; gap:8px; margin-top:10px; }
-  #message{ flex:1; padding:10px; border-radius:8px; background:#0d1210; color:var(--accent); border:1px solid rgba(0,255,153,0.08); }
-  button{ padding:10px 14px; border-radius:8px; border:none; background:var(--accent); color:#00110a; font-weight:700; cursor:pointer;}
-  #statusLine{ margin-top:8px; font-size:0.9rem; opacity:0.9; }
-  #debug{ margin-top:8px; font-size:0.8rem; color:#ccc; display:none; white-space:pre-wrap; max-height:120px; overflow:auto; }
+body{background:#0b0c0f;color:#00ff99;font-family:monospace;margin:0;padding:0;display:flex;flex-direction:column;height:100vh;}
+#chatContainer{flex:1; overflow-y:auto; padding:10px;}
+.message{margin:5px 0;padding:8px 12px;border-radius:12px;max-width:70%;word-wrap:break-word;}
+.kai{background:#007f44;color:#0f0;align-self:flex-end;}
+.manager{background:#004466;color:#00ff99;align-self:flex-start;}
+#inputContainer{display:flex;padding:10px;border-top:1px solid #00ff99;}
+#messageInput{flex:1;padding:10px;background:#11181f;border:2px solid #00ff99;border-radius:10px;color:#00ff99;}
+#sendBtn{padding:10px;background:#00ff99;color:#0b0c0f;border:none;margin-left:5px;border-radius:10px;cursor:pointer;}
 </style>
 </head>
 <body>
-  <h1>Mission Chat — Kai</h1>
-  <div id="chat-box" aria-live="polite"></div>
-
-  <form id="form" onsubmit="event.preventDefault(); sendMessage();">
-    <input id="message" autocomplete="off" placeholder="Type a message..." />
-    <button id="sendBtn" type="submit">Send</button>
-  </form>
-
-  <div id="statusLine">Status: idle</div>
-  <pre id="debug"></pre>
+<div id="chatContainer"></div>
+<div id="inputContainer">
+<input type="text" id="messageInput" placeholder="Type a message">
+<button id="sendBtn">Send</button>
+</div>
 
 <script>
-/* ====== CONFIG ======
- * Put your deployed Web App URL here:
- */
-const API_URL = "https://script.google.com/macros/s/AKfycbyfVOmU5cjEOAjFAR-gy-yVYbtI56Ub_U-Id6CsP-2MfVetfl9n0d0m97pk6-7-To_S/exec";
-
-/* Sender name */
-const SENDER = "Kai";
-
-/* UI refs */
-const chatBox = document.getElementById('chat-box');
-const msgInput = document.getElementById('message');
-const statusLine = document.getElementById('statusLine');
-const debugPre = document.getElementById('debug');
-
-/* polling */
-let lastDataJSON = null;
+const API_URL='https://script.google.com/macros/s/AKfycbxvrgcHuMbV30TUTlYUs8p9doWgqCiNp-JTUK5nfcY43tbFIuSag_xbkQQ8zdmCihBf/exec';
+const chatContainer=document.getElementById('chatContainer');
+const input=document.getElementById('messageInput');
+const sendBtn=document.getElementById('sendBtn');
 
 async function loadMessages(){
-  try {
-    statusLine.textContent = 'Status: loading...';
-    const res = await fetch(API_URL + '?cachebust=' + Date.now(), { method: 'GET', cache: 'no-cache' });
-    const json = await res.json();
-    // If no change, do nothing
-    const str = JSON.stringify(json);
-    if (str !== lastDataJSON) {
-      lastDataJSON = str;
-      renderMessages(json);
-      debug('Loaded messages: ' + json.length);
-    }
-    statusLine.textContent = 'Status: idle';
-  } catch (err) {
-    console.error('loadMessages error', err);
-    statusLine.textContent = 'Status: error loading messages (see console)';
-    debug('loadMessages error: ' + err);
-  }
+  try{
+    const res=await fetch(API_URL); const data=await res.json();
+    chatContainer.innerHTML='';
+    data.forEach(m=>{
+      const div=document.createElement('div'); div.className='message '+(m.Sender==='Kai'?'kai':'manager'); div.textContent=`${m.Sender}: ${m.Message}`; chatContainer.appendChild(div);
+    });
+    chatContainer.scrollTop=chatContainer.scrollHeight;
+  }catch(e){console.error(e);}
 }
 
-function renderMessages(arr) {
-  chatBox.innerHTML = '';
-  arr.forEach(row => {
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble ' + (row.Sender === SENDER ? 'kai' : 'manager');
-    bubble.innerText = row.Message;
-
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-    meta.innerText = (row.Sender || 'Unknown') + ' • ' + (row.Timestamp || '');
-    bubble.appendChild(meta);
-
-    chatBox.appendChild(bubble);
-  });
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-/* Attempt multiple POST methods to maximize compatibility with Apps Script */
-async function postToServer(payloadObj){
-  // Try FormData first (safe for Apps Script doPost parameter handling)
-  try {
-    const form = new FormData();
-    for (const k of Object.keys(payloadObj)) form.append(k, payloadObj[k]);
-    const r = await fetch(API_URL, { method: 'POST', body: form });
-    const text = await r.text();
-    debug('POST using FormData -> ' + r.status + '\n' + text);
-    return { ok: r.ok, status: r.status, text };
-  } catch (err) {
-    debug('FormData POST failed: ' + err);
-  }
-
-  // Try urlencoded
-  try {
-    const urlencoded = new URLSearchParams();
-    for (const k of Object.keys(payloadObj)) urlencoded.append(k, payloadObj[k]);
-    const r2 = await fetch(API_URL, { method: 'POST', body: urlencoded, headers: { 'Content-Type': 'application/x-www-form-urlencoded' }});
-    const text2 = await r2.text();
-    debug('POST using x-www-form-urlencoded -> ' + r2.status + '\n' + text2);
-    return { ok: r2.ok, status: r2.status, text: text2 };
-  } catch (err) {
-    debug('URL-encoded POST failed: ' + err);
-  }
-
-  // Try JSON fallback
-  try {
-    const r3 = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payloadObj), headers: { 'Content-Type': 'application/json' }});
-    const text3 = await r3.text();
-    debug('POST using JSON -> ' + r3.status + '\n' + text3);
-    return { ok: r3.ok, status: r3.status, text: text3 };
-  } catch (err) {
-    debug('JSON POST failed: ' + err);
-  }
-
-  return { ok: false, status: 0, text: 'All POST attempts failed' };
-}
-
+let sending=false;
 async function sendMessage(){
-  const message = msgInput.value.trim();
-  if (!message) return;
-  statusLine.textContent = 'Status: sending...';
-  const payload = { Sender: SENDER, Message: message };
-
-  try {
-    const result = await postToServer(payload);
-    debug('sendMessage result: ' + JSON.stringify(result));
-    if (result.ok) {
-      msgInput.value = '';
-      await loadMessages(); // refresh immediately
-      statusLine.textContent = 'Status: sent';
-    } else {
-      statusLine.textContent = 'Status: send failed (check script & permissions)';
-    }
-  } catch (err) {
-    console.error('sendMessage error', err);
-    statusLine.textContent = 'Status: send error (console)';
-    debug('sendMessage error: ' + err);
-  }
+  if(sending) return;
+  const msg=input.value.trim(); if(!msg) return;
+  sending=true;
+  try{
+    await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({Sender:'Kai',Message:msg})});
+    input.value=''; loadMessages();
+  }catch(e){console.error(e);}
+  sending=false;
 }
 
-/* small debug panel */
-function debug(s){
-  debugPre.style.display = 'block';
-  debugPre.textContent = (new Date()).toISOString() + ' — ' + s + '\n\n' + debugPre.textContent;
-}
+sendBtn.addEventListener('click',sendMessage);
+input.addEventListener('keydown',e=>{if(e.key==='Enter'){sendMessage();}});
 
-/* UI wiring */
-document.getElementById('form').addEventListener('submit', e => { e.preventDefault(); sendMessage(); });
-msgInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
-
-/* Polling loop */
-loadMessages();
-setInterval(loadMessages, 2500);
+loadMessages(); setInterval(loadMessages,3000);
 </script>
 </body>
 </html>
